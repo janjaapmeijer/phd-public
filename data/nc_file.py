@@ -1,4 +1,4 @@
-from __init__ import *
+from setup import *
 # import csv
 from datetime import datetime
 from scipy.io import loadmat
@@ -6,10 +6,8 @@ from netCDF4 import Dataset
 import numpy as np
 
 # LOAD DATA
-# dict_ctd = loadmat(os.path.join(root, 'Data', 'Voyages', 'SS9802', 'ctd', 'ss9802_ctd.mat'))
-
-input_file = os.path.join(data, 'Voyages', 'SS9802', 'trawler', 'O&A_SS199802_ctd_trawler.csv')
-output_file = os.path.join(root, 'Data', 'Voyages', 'SS9802', 'netcdf', 'ctd.nc')
+input_file = os.path.join(data, 'processed', 'ss9802', 'trawler', 'ctd', 'O&A_SS199802_ctd_trawler.csv')
+output_file = os.path.join(data, 'processed', 'ss9802', 'netcdf', 'ctd.nc')
 
 from pandas import read_csv
 
