@@ -1,4 +1,4 @@
-from _init import *
+from _setup import *
 
 # import matplotlib
 # matplotlib.use('TkAgg')
@@ -14,7 +14,9 @@ import cartopy.crs as ccrs
 
 import numpy as np
 
-import cmocean
+from netCDF4 import Dataset
+
+# import cmocean
 from gsw import geostrophic_velocity
 
 # FUNCTIONS
@@ -114,8 +116,9 @@ def figure(x, y, z, xyz=None, levels=None, ct_levels=None, cmap=None, pcol=True,
     return fig, ax
 
 # read ctd data
-dict_stations = read_dict(os.path.join(root, 'Analysis', 'SS9802', 'data'), 'ctd_stations.pkl', encoding='latin1')
-
+# dict_stations = read_dict(os.path.join(root, 'Analysis', 'SS9802', 'data'), 'ctd_stations.pkl', encoding='latin1')
+ncfile = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ctd.nc')
+dict_stations = Dataset(ncfile, mode='r')
 
 # TRANSECT INFORMATION
 transects = {1: list(range(3, 11)), 2: list(reversed(range(11, 19))), 3: list(range(19, 28)),
@@ -130,14 +133,14 @@ ntsmax = len(transects.keys())
 
 # FIND INDICES OF PRESSURE LEVELS
 pressure_levels = {}
-for ip, p in enumerate(dict_stations['P']):
+for ip, p in enumerate(dict_stations['pressure']):
     pressure_levels[p] = ip
 
 p_ref = 1500
 p_int = 1000
 
-print('reference level is: %f dbar\n' %dict_stations['P'][pressure_levels[p_ref]],
-      'interest level is: %f dbar' %dict_stations['P'][pressure_levels[p_int]])
+print('reference level is: %f dbar\n' %dict_stations['pressure'][pressure_levels[p_ref]],
+      'interest level is: %f dbar' %dict_stations['pressure'][pressure_levels[p_int]])
 
 
 # GATHER PROFILES IN TRANSECTS AND DETERMINE DYNAMIC HEIGHT WITH RESPECT TO REFERENCE LEVEL
@@ -146,7 +149,7 @@ dict_trans = {}
 for transect in transects.keys():
     # inititialise dictionary with empty array of size pressure levels and number of stations per transect
     dict_trans[transect] = {}
-    maskarray = np.ma.masked_all((dict_stations['P'].size, len(transects[transect])))
+    maskarray = np.ma.masked_all((dict_stations['pressure'].size, len(transects[transect])))
     for var in vars[:-1]:
         dict_trans[transect][var] = maskarray.copy()
     # fill each transect array with variables from stations
