@@ -8,7 +8,7 @@ from pandas import read_csv
 
 # LOAD DATA
 input_file = os.path.join(datadir, 'processed', 'ss9802', 'trawler', 'ctd', 'O&A_SS199802_ctd_trawler.csv')
-output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ctd.nc')
+output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd.nc')
 
 if not os.path.exists(os.path.dirname(output_file)):
     os.makedirs(os.path.dirname(output_file))
@@ -66,8 +66,9 @@ for its, transect in enumerate(transects.keys()):
         oxygen_ts[its, ipf, ] = oxygen[profile - 1]
         # print(its, ipf, profile - 1)
 
+# import matplotlib.pyplot as plt
 # fig, ax = plt.subplots()
-# cf = ax.contourf(oxygen_ts[3,].T)
+# cf = ax.contourf(test['temperature_ts'][0,].T)
 # ax.invert_yaxis()
 # plt.colorbar(cf)
 
@@ -78,48 +79,110 @@ epoch_time = datetime.utcfromtimestamp(0)
 
 # CREATE EMPTY NETCDF FILE
 # https://netcdf4-python.googlecode.com/svn/trunk/docs/netCDF4-module.html
-profile_input = Dataset(output_file, 'w')
+
+# profile_input = Dataset(output_file, 'w')
+
+### PYTHON CLASS ###
+
+dim = {
+    'time': len(df['START_TIME']),  # maximum timestamps
+    'profile': df['STATION'].max(), # maximum profiles
+    'start_end': 2,                 # start/ end of profile
+    'plevel': npmax,                # maximum pressure levels
+    'transect': ntsmax,             # maximum transects
+    'profile_ts': nstmax            # maximum profiles per transect
+}
+
+glob_attr = {
+    'title': 'Sub Antarctic Front Dynamics Experiment (SAFDE) 1997-1998',
+    'creator_name': 'Jan Jaap Meijer'
+}
+
+# try to use standard name as var_name as specified here:
+# http://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
+# var_name = ['station', 'start_time', 'end_time',
+#           'start_lon', 'start_lat', 'end_lon', 'end_lat', 'bottom_lon', 'bottom_lat',
+#           'min_depth', 'max_depth', 'bottom_depth']
+
+# TODO: lists longitude have different lengths
+vars = {
+    'station':
+        ('i4', ('profile',), df['STATION'].unique()),
+    'time':
+        ('f8', ('profile', 'start_end', ), np.stack((df['START_TIME'].unique(), df['END_TIME'].unique()), axis=-1)),
+    'longitude':
+        ('f8', ('profile', 'start_end', ), np.stack((df['START_LON'].unique(), df['END_LON'].unique()), axis=-1)),
+    'latitude':
+        ('f8', ('profile', 'start_end', ), np.stack((df['START_LAT'].unique(), df['END_LAT'].unique()), axis=-1)),
+    'sea_water_pressure':
+        ('f8', ('plevel',), p_levels),
+    'sea_water_temperature':
+        ('f8', ('profile', 'plevel', ), temperature),
+    'sea_water_practical_salinity':
+        ('f8', ('profile', 'plevel', ), salinity),
+    'mole_concentration_of_dissolved_molecular_oxygen_in_sea_water':
+        ('f8', ('profile', 'plevel', ), oxygen),
+    'transect sea_water_temperature':
+        ('f8', ('transect', 'profile_ts', 'plevel', ), temperature_ts),
+    'transect sea_water_practical_salinity':
+        ('f8', ('transect', 'profile_ts', 'plevel', ), salinity_ts),
+    'transect mole_concentration_of_dissolved_molecular_oxygen_in_sea_water':
+        ('f8', ('transect', 'profile_ts', 'plevel', ), oxygen_ts),
+}
+
+# df['START_LON'].unique() #, df['END_LON'].unique())
+nc = createNetCDF(output_file)
+nc.add_dims(dim)
+nc.add_glob_attr(glob_attr)
+nc.create_vars(vars)
+nc.close()
+
+test = Dataset(output_file, 'r')
+
+### PYTHON CLASS ###
+
 
 # ADD DIMENSIONS
 # (1)
 profile_input.createDimension('time', len(df['START_TIME']))
 # (2)
 profile_input.createDimension('profile', df['STATION'].max())
-profile_input.createDimension('pressure', npmax)
+profile_input.createDimension('plevel', npmax)
 # (3)
 profile_input.createDimension('transect', ntsmax)
 profile_input.createDimension('profile_ts', nstmax)
 
 
 # ADD GLOBAL ATTRIBUTES
+
 profile_input.Conventions = 'CF-1.6'
 profile_input.Metadata_Conventions = 'Unidata Dataset Discovery v1.0'
 profile_input.title = 'Sub Antarctic Front Dynamics Experiment (SAFDE) 1997-1998'
+profile_input.creator_name = 'Jan Jaap Meijer'
+# creator_url = 'https://janjaapmeijer.github.io/AtSea/'
 
-vars_1 = ['station', 'start_time', 'end_time',
-          'start_lon', 'start_lat', 'end_lon', 'end_lat', 'bottom_lon', 'bottom_lat',
-          'min_depth', 'max_depth', 'bottom_depth']
+# CREATE VARIABLES
 
-# ADD VARIABLES
 stations = profile_input.createVariable('station', 'i4', ('profile',))
 start_times = profile_input.createVariable('starttime', 'f8', ('profile',))
 end_times = profile_input.createVariable('endtime', 'f8', ('profile',))
-pressures = profile_input.createVariable('pressure', 'f8', ('pressure',))
+pressures = profile_input.createVariable('pressure', 'f8', ('plevel',))
 longitudes = profile_input.createVariable('longitude', 'f8', ('profile',))
 latitudes = profile_input.createVariable('latitude', 'f8', ('profile',))
+
 # bottomdepths
 
 # (1)
 
 # (2)
-temperatures = profile_input.createVariable('temperature', 'f8', ('profile', 'pressure', ))
-salinitys = profile_input.createVariable('salinity', 'f8', ('profile', 'pressure', ))
-oxygens = profile_input.createVariable('oxygen', 'f8', ('profile', 'pressure', ))
+temperatures = profile_input.createVariable('temperature', 'f8', ('profile', 'plevel', ))
+salinitys = profile_input.createVariable('salinity', 'f8', ('profile', 'plevel', ))
+oxygens = profile_input.createVariable('oxygen', 'f8', ('profile', 'plevel', ))
 
 # (3)
-temperatures_ts = profile_input.createVariable('temperature_ts', 'f8', ('transect', 'profile_ts', 'pressure', ))
-salinitys_ts = profile_input.createVariable('salinity_ts', 'f8', ('transect', 'profile_ts', 'pressure', ))
-oxygens_ts = profile_input.createVariable('oxygen_ts', 'f8', ('transect', 'profile_ts', 'pressure', ))
+temperatures_ts = profile_input.createVariable('temperature_ts', 'f8', ('transect', 'profile_ts', 'plevel', ))
+salinitys_ts = profile_input.createVariable('salinity_ts', 'f8', ('transect', 'profile_ts', 'plevel', ))
+oxygens_ts = profile_input.createVariable('oxygen_ts', 'f8', ('transect', 'profile_ts', 'plevel', ))
 
 # ADD VARIABLE ATTRIBUTES
 stations.standard_name = 'station'
@@ -146,14 +209,20 @@ end_times[:] = df['END_TIME'].unique()
 pressures[:] = p_levels
 # longitudes[:] = df['START_LON'].unique() #, df['END_LON'].unique())
 # latitudes[:] = df['START_LAT'].unique() #, df['END_LAT'].unique())
+
+# (2)
 temperatures[:] = temperature
 salinitys[:] = salinity
 oxygens[:] = oxygen
+
+# (3)
+temperatures_ts[:] = temperature_ts
+salinitys_ts[:] = salinity_ts
+oxygens_ts[:] = oxygen_ts
 # bottomdepths[]b
 
 profile_input.close()
 
 
 # example = Dataset(os.path.join(datadir, 'external', 'templates', 'NODC_profile_template_v1.1_2016-09-22_184951.349975.nc'), mode='r')
-#
-test = Dataset(output_file, mode='r')
+
