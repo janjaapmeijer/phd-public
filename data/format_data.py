@@ -34,7 +34,7 @@ if sys.version_info[0] == 3: # python3
 
         # LOAD DATA
         # load ctd data and clean up
-        dict_ctd = loadmat(os.path.join(root, 'Data', 'Voyages', 'SS9802', 'ctd', 'ss9802_ctd.mat'))
+        dict_ctd = loadmat(os.path.join(datadir, 'processed', 'ss9802', 'steve', 'ss9802_ctd.mat'))
         delete = ['__globals__', '__header__', '__version__', 'ans']
         for dlt in delete:
             if dlt in dict_ctd.keys():
