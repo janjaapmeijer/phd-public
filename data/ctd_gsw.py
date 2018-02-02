@@ -23,7 +23,7 @@ output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd
 
 
 # 1) CALCULATE TEOS-10 VARIABLES IN PYTHON3
-gsw_vars = ('SA', 'CT', 'z', 'pt', 'sigma0', 'spiciness0', 'gamman') #, 'deltaD'
+gsw_vars = ('SA', 'CT', 'z', 'pt', 'sigma0', 'spiciness0', 'deltaD', 'gamman') #, 'deltaD'
 
 if os.path.isfile(input_file):
     while True:
@@ -71,7 +71,7 @@ if os.path.isfile(input_file):
             else:
 
                 # change one dimension variables to two dimensions
-                p, lon, lat = nc['p'][:][np.newaxis, :], nc['lon'][:,0][:, np.newaxis], nc['lat'][:,1][:, np.newaxis]
+                p, lon, lat = nc['p'][:], nc['lon'][:,0][:, np.newaxis], nc['lat'][:,0][:, np.newaxis]
 
                 # convert in-situ variables to gsw variables
                 p_ref = 1500
@@ -80,8 +80,7 @@ if os.path.isfile(input_file):
                 CT = CT_from_t(SA, nc['t'][:], p)
                 pt = pt_from_t(SA, nc['t'][:], p, p_ref)
 
-                # TODO: make gsw dynamic height function
-                # deltaD = geo_strf_dyn_height(SA, CT, p, p_ref=p_ref)
+                deltaD = geo_strf_dyn_height(SA.data, CT.data, p, p_ref=p_ref, axis=1)
 
                 vars = {
                     'SA':
@@ -96,8 +95,8 @@ if os.path.isfile(input_file):
                         ('sea_water_sigmat', 'f8', ('profile', 'plevel', ), sigma0(SA, CT)),
                     'spiciness0':
                         ('sea_water_spiciness', 'f8', ('profile', 'plevel', ), spiciness0(SA, CT)),
-                    # 'deltaD':
-                    #     ('depth', 'f8', ('profile',), deltaD),
+                    'deltaD':
+                        ('dynamic_height_anomaly', 'f8', ('profile', 'plevel', ), deltaD),
                 }
 
                 # save data in netcdf file using OceanPy's createNetCDF class
