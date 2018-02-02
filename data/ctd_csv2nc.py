@@ -48,17 +48,26 @@ if os.path.isfile(input_file):
 
         # (2) Store each variable in array of stations and pressure levels
 
-        # INDEX OF FIRST OBSERVATION AT EACH STATION
+        # # INDEX OF FIRST OBSERVATION AT EACH STATION + INDEX OF VERY LAST OBSERVATION
         idx = [0] + [i + 1 for i in range(len(df) - 1) if df.loc[i, 'STATION'] != df.loc[i + 1, 'STATION']]
 
         # DEFINE ARRAY WITH SHAPE (STATIONS, PRESSURE LEVELS)
         npmax = len(p_levels)
-        maskarr = np.ma.masked_all((df['STATION'].max(), npmax))
+        nsmax = df['STATION'].max()
+
+        maskarr = np.ma.masked_all((nsmax, npmax))
         temperature, salinity, oxygen = maskarr.copy(), maskarr.copy(), maskarr.copy()
-        for i in range(0, len(idx) - 1):
-            temperature[i, 0:idx[i + 1] - idx[i]] = df['TEMPERATURE'].iloc[idx[i]:idx[i + 1]].values
-            salinity[i, 0:idx[i + 1] - idx[i]] = df['SALINITY'].iloc[idx[i]:idx[i + 1]].values
-            oxygen[i, 0:idx[i + 1] - idx[i]] = df['OXYGEN'].iloc[idx[i]:idx[i + 1]].values
+
+        for ist, station in enumerate(df['STATION'].unique()):
+            nobs = len(df.loc[df['STATION'] == station])
+            temperature[ist, 0:nobs] = df['TEMPERATURE'].loc[df['STATION'] == station].values
+            salinity[ist, 0:nobs] = df['SALINITY'].loc[df['STATION'] == station].values
+            oxygen[ist, 0:nobs] = df['OXYGEN'].loc[df['STATION'] == station].values
+
+        # for i in range(0, nsmax):
+        #     temperature[i, 0:idx[i + 1] - idx[i]] = df['TEMPERATURE'].iloc[idx[i]:idx[i + 1]].values
+        #     salinity[i, 0:idx[i + 1] - idx[i]] = df['SALINITY'].iloc[idx[i]:idx[i + 1]].values
+        #     oxygen[i, 0:idx[i + 1] - idx[i]] = df['OXYGEN'].iloc[idx[i]:idx[i + 1]].values
 
         # (3) Store each variable in array of stations in transect, transect number and pressure levels
 
