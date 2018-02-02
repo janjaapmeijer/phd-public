@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NC_DIR=/home/janjaapmeijer/Checkouts/PhD/data/processed/ss9802/netcdf
+NC_DIR=$HOME/Checkouts/PhD/data/processed/ss9802/netcdf
 
 source activate ocean3
 
