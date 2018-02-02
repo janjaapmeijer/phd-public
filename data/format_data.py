@@ -168,8 +168,7 @@ if sys.version_info[0] == 2:  # python2
             print('File already exists including gamman variable')
         else:
             for station in dict_stations.keys()[:-1]:
-                #TODO: NORMAL TEMPERATURE OR CONSERVATIVE TEMPERATURE????
-                dict_stations[station]['gamman'] = nds.gamma_n(np.nan_to_num(dict_stations[station]['SA']), np.nan_to_num(dict_stations[station]['T']),
+                dict_stations[station]['gamman'] = nds.gamma_n(np.nan_to_num(dict_stations[station]['SP']), np.nan_to_num(dict_stations[station]['T']),
                                                                 dict_stations['P'], dict_stations['P'].size,
                                                                 dict_stations[station]['lon'], dict_stations[station]['lat'])[0]
                 nans = np.where(dict_stations[station]['gamman'] == -99)
