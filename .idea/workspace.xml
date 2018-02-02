@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="b89d246f-8945-49bb-a5a0-4179921ca713" name="Default" comment="In-situ temperature, salinity and oxygen were not correctly written from pandas DataFrame too 2d numpy arrays.">
-      <change beforePath="$PROJECT_DIR$/.idea/SS9802.iml" afterPath="$PROJECT_DIR$/.idea/SS9802.iml" />
+    <list default="true" id="b89d246f-8945-49bb-a5a0-4179921ca713" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/temp/test 2.py" afterPath="" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -354,7 +352,14 @@
       <option name="project" value="LOCAL" />
       <updated>1517535011859</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Additional files.">
+      <created>1517535079159</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1517535079159</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TodoView">
@@ -422,7 +427,8 @@
     <MESSAGE value="In-situ temperature, salinity and oxygen were not correctly written from pandas DataFrame too 2d numpy arrays." />
     <MESSAGE value="Solved TODO, gamman has to be calculated with in-situ temperature and practical salinity, not with conservative temperature and absolute salinity. See matlab scripts from: http://www.teos-10.org/preteos10_software/neutral_density.html." />
     <MESSAGE value="Old script for writing NetCDF file." />
-    <option name="LAST_COMMIT_MESSAGE" value="Old script for writing NetCDF file." />
+    <MESSAGE value="Additional files." />
+    <option name="LAST_COMMIT_MESSAGE" value="Additional files." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
