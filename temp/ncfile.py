@@ -1,3 +1,57 @@
+from _setup import *
+
+from netCDF4 import Dataset
+import matplotlib.pyplot as plt
+
+import numpy as np
+from scipy.interpolate import interp1d
+
+output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd_gsw.nc')
+nc = Dataset(output_file, 'r')
+
+
+
+def layer_depth(sigma0, z, interval=interval):
+
+    # calculate index of 10 meter reference depth
+    i10, ref_dep = min(enumerate(z), key=lambda x: abs(x[1] + 10))
+
+    # # calculate index of mixed layer depth using a threshold method with de Boyer Montegut et al's criteria;
+    # # a density difference of .03 kg/m^3
+    # imld = i10 + next((i for i in range(len(sigma0[i10:])) if abs(sigma0[i10] - sigma0[i10+i]) > 0.03), np.nan)
+
+    depths = []
+    for iv in interval:
+        if min(sigma0) < iv < max(sigma0):
+            ic, closest = min(enumerate(sigma0[i10:]), key=lambda x: abs(x[1] - iv))
+            ic += i10
+
+            depth = np.interp(iv, sigma0[ic - 10:ic + 10], z[ic - 10:ic + 10])
+            depths.append(depth)
+            # print(iv, sigma0[ic], z[ic], depth)
+        else:
+            depths.append(np.nan)
+
+    layer_depths = [abs(depths[i] - depths[i + 1]) for i in range(len(depths) - 1)]
+    return layer_depths
+
+for profile in range(len(nc.dimensions['profile'])):
+
+    sigma0 = nc['sigma0'][profile, ]
+    z = nc['z'][profile, ]
+    interval = np.linspace(26.2, 27.6, 8)
+
+    print(layer_depth(sigma0, z, interval=interval))
+
+#
+
+#
+# z_0 = np.zeros(z.shape)
+# z_mld = z_0.copy()
+# z_mld[:] = z[imld]
+#
+# plt.plot(sigma0, z, sigma0, z_mld)
+
 
 # SET TIMES
 # time_units = 'seconds since 1970-01-01 00:00:00.0 +0000'
