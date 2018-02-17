@@ -23,7 +23,7 @@ output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd
 
 
 # 1) CALCULATE TEOS-10 VARIABLES IN PYTHON3
-gsw_vars = ('SA', 'CT', 'z', 'pt', 'sigma0', 'spiciness0', 'deltaD', 'gamman') #, 'deltaD'
+gsw_vars = ('SA', 'CT', 'g', 'z', 'pt', 'sigma0', 'spiciness0', 'deltaD', 'gamman') #, 'deltaD'
 
 if os.path.isfile(input_file):
     while True:
@@ -87,6 +87,8 @@ if os.path.isfile(input_file):
                         ('sea_water_absolute_salinity', 'f8', ('profile', 'plevel', ), SA),
                     'CT':
                         ('sea_water_conservative_temperature', 'f8', ('profile', 'plevel', ), CT),
+                    'g':
+                        ('gravitational_acceleration', 'f8', ('profile', 'plevel', ), grav(lat, p)),
                     'z':
                         ('height', 'f8', ('profile', 'plevel', ), z_from_p(p, lat)),
                     'pt':

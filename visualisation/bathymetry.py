@@ -1,6 +1,7 @@
-from __init__ import *
+# from __init__ import *
+from _setup import *
 import numpy as np
-from OceanPy.readwrite import read_dict, write_dict
+# from OceanPy.readwrite import read_dict, write_dict
 from scipy import interpolate
 from netCDF4 import Dataset
 from mayavi import mlab
@@ -9,7 +10,7 @@ from scipy.interpolate import griddata
 
 
 # 1 arc-minute resolution
-bathy = Dataset(os.path.join(root, 'data', 'Bathymetry', 'BODC', 'res1min', 'GRIDONE_2D_137.0_-52.2_145.0_-48.0.nc'))
+bathy = Dataset(os.path.join(datadir, 'external', 'bathymetry', 'bodc_res1min', 'GRIDONE_2D_137.0_-52.2_145.0_-48.0.nc'))
 # 30 arc-second resolution
 # bathy = Dataset(os.path.join(root, 'Data', 'Bathymetry', 'BODC', 'res30sec', 'GEBCO_2014_2D_137.0_-52.2_145.0_-48.0.nc'))
 # scale = 0.5
@@ -21,31 +22,30 @@ bathy = Dataset(os.path.join(root, 'data', 'Bathymetry', 'BODC', 'res1min', 'GRI
 #
 # elev_bathy = f(lonx, laty)
 
-dict_ctd = read_dict(os.path.join(root, 'out', 'data-ss9802'), 'ctd_stations.pkl', encoding='latin1')
-lon_ctd = np.array([dict_ctd[station]['lon'][0] for station in list(dict_ctd.keys())[2:-1]])
-lat_ctd = np.array([dict_ctd[station]['lat'][0] for station in list(dict_ctd.keys())[2:-1]])
-dep_ctd = np.array([dict_ctd[station]['depth'] for station in list(dict_ctd.keys())[2:-1]])
-sigma0 = np.array([dict_ctd[station]['sigma0'] for station in list(dict_ctd.keys())[2:-1]])
+input_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd_gsw.nc')
+nc = Dataset(input_file, 'r')
 
-# xy = np.array(list(map(lambda x, y: [x, y], lon_ctd, lat_ctd)))
+lon_ctd = nc['lon'][2:, 0]
+lat_ctd = nc['lat'][2:, 0]
+z_ctd = nc['z'][2:, :]
+sigma0, mask = nc['sigma0'][2:, :].data, nc['sigma0'][2:, :].mask
+sigma0[mask] = np.nan
 
-lon_flat = np.tile(lon_ctd, dep_ctd.shape[1])
-lat_flat = np.tile(lat_ctd, dep_ctd.shape[1])
-dep_flat, sigm_flat = np.array([]), np.array([])
-for i in range(dep_ctd.shape[1]):
-    dep_flat = np.append(dep_flat, dep_ctd[:, i])
-    sigm_flat = np.append(sigm_flat, sigma0[:, i])
+# lon_flat = np.repeat(lon_ctd, z_ctd.shape[1])
+# lat_flat = np.repeat(lat_ctd, z_ctd.shape[1])
+# z_flat, sigma0_flat = z_ctd.flatten(), sigma0.flatten()
 
-# loc = np.random.uniform(low=-500, high=-1000, size=lon_ctd.shape)
+lon_flat = np.tile(lon_ctd, z_ctd.shape[1])
+lat_flat = np.tile(lat_ctd, z_ctd.shape[1])
+z_flat, sigma0_flat = np.array([]), np.array([])
+for i in range(z_ctd.shape[1]):
+    z_flat = np.append(z_flat, z_ctd[:, i])
+    sigma0_flat = np.append(sigma0_flat, sigma0[:, i])
+
 loc = np.zeros(lon_ctd.shape)
 
-# lon_flat, lat_flat = np.array([]), np.array([])
-# for lon, lat in zip(lon_ctd, lat_ctd):
-#     lon_flat = np.append(lon_flat, np.ones(dep_ctd.shape[1]) * lon)
-#     lat_flat = np.append(lat_flat, np.ones(dep_ctd.shape[1]) * lat)
-#
-# dep_flat, sigm_flat = -dep_ctd.flatten(), sigma0.flatten()
-points = np.array((lon_flat, lat_flat, -dep_flat, sigm_flat)).T
+points = np.array((lon_flat, lat_flat, z_flat, sigma0_flat)).T
+
 # get rid of the nans
 # points = points[np.where(np.isfinite(points[:,3:]))[0],]
 
@@ -53,7 +53,7 @@ points = np.array((lon_flat, lat_flat, -dep_flat, sigm_flat)).T
 # np.random.shuffle(points)
 
 stations = mlab.points3d(lon_ctd, lat_ctd, loc, scale_factor=0.1, color=(0,0,0))
-ug = tvtk.UnstructuredGrid(points=points[:,:3])
+ug = tvtk.UnstructuredGrid(points=points[:, :3])
 ug.point_data.scalars = points[:, -1]
 ug.point_data.scalars.name = "density"
 ds = mlab.pipeline.add_dataset(ug)
@@ -67,35 +67,21 @@ mlab.axes(xlabel='longitude', ylabel='latitude', zlabel='z')
 
 mlab.show()
 
-#
-#
-# # https://stackoverflow.com/questions/9419451/3d-contour-plot-from-data-using-mayavi-python
-# from tvtk.api import tvtk
-#
-# points = np.random.normal(0, 1, (1000, 3))
-# ug = tvtk.UnstructuredGrid(points=points)
-# ug.point_data.scalars = np.sqrt(np.sum(points**2, axis=1))
-# ug.point_data.scalars.name = "value"
-# ds = mlab.pipeline.add_dataset(ug)
-# delaunay = mlab.pipeline.delaunay3d(ds)
-# iso = mlab.pipeline.iso_surface(delaunay)
-# iso.actor.property.opacity = 0.1
-# iso.contour.number_of_contours = 10
-#
-# mlab.show()
-
 
 # FIND INDICES OF PRESSURE LEVELS
 pressure_levels = {}
-for ip, p in enumerate(dict_ctd['P']):
+for ip, p in enumerate(nc['p']):
     pressure_levels[p] = ip
 
 p_ref = 1500
 p_int = 1000
 
 # get dynamic height contours
-D = np.array([dict_ctd[station]['deltaD'][pressure_levels[p_int]] / dict_ctd[station]['g'][pressure_levels[p_int]]
-              for station in list(dict_ctd.keys())[2:-1]])
+# D = np.array([dict_ctd[station]['deltaD'][pressure_levels[p_int]] / dict_ctd[station]['g'][pressure_levels[p_int]]
+#               for station in list(dict_ctd.keys())[2:-1]])
+
+D = np.array([nc['deltaD'][profile, pressure_levels[p_int]] / nc['g'][profile, pressure_levels[p_int]]
+              for profile in range(2, len(nc.dimensions['profile']))])
 
 
 nx, ny = 200, 200
@@ -108,11 +94,11 @@ Dgrd = griddata((lon_ctd, lat_ctd), D, (xx, yy), method='linear')
 value = 26.9
 idx = np.nanargmin(abs(sigma0-value), axis=1)
 idx2 = np.nanargmin(abs(sigma0-27.15), axis=1)
-dep_sig1 = np.zeros(sigma0.shape[0])
-dep_sig2 = np.zeros(sigma0.shape[0])
+z_sig1 = np.zeros(sigma0.shape[0])
+z_sig2 = np.zeros(sigma0.shape[0])
 for i in range(sigma0.shape[0]):
-    dep_sig1[i] = dep_ctd[i, idx[i]]
-    dep_sig2[i] = dep_ctd[i, idx2[i]]
+    z_sig1[i] = z_ctd[i, idx[i]]
+    z_sig2[i] = z_ctd[i, idx2[i]]
 
 # sig0_1 = sigma0[i, ix] for i in range
 
@@ -156,7 +142,7 @@ mlab.clf()
 # pts.actor.actor.scale = (1, 1, scalefac)
 
 # plot density points and surfaces
-pts1 = mlab.points3d(lon_ctd, lat_ctd, -dep_sig1, -dep_sig1, scale_mode='none', scale_factor=0.1)
+pts1 = mlab.points3d(lon_ctd, lat_ctd, z_sig1, z_sig1, scale_mode='none', scale_factor=0.1)
 # pts2.glyph.glyph_source.glyph_source.center = [0,0,0]
 pts1.actor.actor.scale = (1, 1, scalefac)
 
@@ -164,7 +150,7 @@ mesh = mlab.pipeline.delaunay2d(pts1)
 surf = mlab.pipeline.surface(mesh, opacity=0.5)
 surf.actor.actor.scale = [1, 1, scalefac]
 
-pts2 = mlab.points3d(lon_ctd, lat_ctd, -dep_sig2, -dep_sig2, scale_mode='none', scale_factor=0.1)
+pts2 = mlab.points3d(lon_ctd, lat_ctd, z_sig2, z_sig2, scale_mode='none', scale_factor=0.1)
 pts2.actor.actor.scale = (1, 1, scalefac)
 mesh = mlab.pipeline.delaunay2d(pts2)
 surf2 = mlab.pipeline.surface(mesh, opacity=0.5)
