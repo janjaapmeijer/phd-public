@@ -59,3 +59,43 @@ pz = np.ones_like(px)*0.05
 r = np.ones_like(px)*.4
 mlab.points3d(px,py,pz,r, color=(0.9,0.05,.3), scale_factor=1)
 mlab.show()
+
+### EXAMPLE 5
+
+# https://stackoverflow.com/questions/9419451/3d-contour-plot-from-data-using-mayavi-python
+
+from scipy.interpolate import griddata
+import numpy as np
+
+# Create some test data, 3D gaussian, 200 points
+dx, pts = 2, 100j
+
+N = 500
+R = np.random.random((N,3))*2*dx - dx
+V = np.exp(-( (R**2).sum(axis=1)) )
+
+# Create the grid to interpolate on
+X,Y,Z = np.mgrid[-dx:dx:pts, -dx:dx:pts, -dx:dx:pts]
+
+# Interpolate the data
+F = griddata(R, V, (X,Y,Z))
+
+
+from mayavi.mlab import *
+contour3d(F,contours=8,opacity=.2 )
+
+
+import numpy as np
+from tvtk.api import tvtk
+from mayavi import mlab
+
+points = np.random.normal(0, 1, (1000, 3))
+ug = tvtk.UnstructuredGrid(points=points)
+ug.point_data.scalars = np.sqrt(np.sum(points**2, axis=1))
+ug.point_data.scalars.name = "value"
+ds = mlab.pipeline.add_dataset(ug)
+delaunay = mlab.pipeline.delaunay3d(ds)
+iso = mlab.pipeline.iso_surface(delaunay)
+iso.actor.property.opacity = 0.1
+iso.contour.number_of_contours = 10
+mlab.show()
