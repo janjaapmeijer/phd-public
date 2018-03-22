@@ -1,14 +1,17 @@
-from _init import *
+from _setup import *
 
-from scipy.io import loadmat
 import numpy as np
-
+import warnings
+warnings.filterwarnings('ignore')
 from scipy.interpolate import griddata
+
+from netCDF4 import Dataset, num2date
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 from gsw import z_from_p, f, distance
+from gsw import sigma0
 
 from OceanPy.projections import geodetic2ecef, ecef2enu, llh2enu
 from OceanPy.readwrite import read_dict, write_dict
@@ -16,112 +19,175 @@ from OceanPy.projections import haversine, vincenty
 from OceanPy.find import find_in_circle, find_closest
 
 # load adcp data and clean up
-dict_adcp = loadmat(os.path.join(root, 'Data', 'Voyages', 'SS9802', 'adcp', 'ss9802_adcp_qc.mat'))
+# dict_adcp = loadmat(os.path.join(root, 'Data', 'Voyages', 'SS9802', 'adcp', 'ss9802_adcp_qc.mat'))
+input_file_adcp = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_adcp.nc')
+input_file_ctd = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd_gsw.nc')
 
-delete = ['__globals__', '__header__', '__version__', 'ans']
-for dlt in delete:
-    if dlt in dict_adcp.keys():
-        dict_adcp.pop(dlt)
+adcp = Dataset(input_file_adcp)
+ctd = Dataset(input_file_ctd)
 
-cnav = np.empty((3, dict_adcp['unav'].shape[1]), dtype='str')
-for i, c in enumerate(dict_adcp['cnav']):
-    cnav[i] = list(c)
-dict_adcp['cnav'] = cnav
+time_adcp = num2date(adcp['time'][:], adcp['time'].units)
+time_ctd = num2date(ctd['time'][:], ctd['time'].units)
 
-# load ctd lon, lat data
-dict_ctd = read_dict(os.path.join(root, 'Analysis', 'SS9802', 'data'), 'ctd_stations.pkl', encoding='latin1')
-lon_ctd = np.array([dict_ctd[station]['lon'][0] for station in list(dict_ctd.keys())[2:-1]])
-lat_ctd = np.array([dict_ctd[station]['lat'][0] for station in list(dict_ctd.keys())[2:-1]])
-p_ctd = dict_ctd['P']
-del dict_ctd
+# calculate mean of the adcp velocities based on the time interval that the ctd was overboard
+nst, npl = ctd.dimensions['profile'].size, adcp.dimensions['plevel'].size
+utmean, vtmean, ptmean = np.ma.masked_all((nst, npl)), np.ma.masked_all((nst, npl)), \
+                        np.ma.masked_all((nst, npl))
+lonmean, latmean = np.ma.masked_all((nst,)), np.ma.masked_all((nst,))
+for ist, tctd in enumerate(time_ctd): #time_ctd[0:5]
+    it = [it for it, tadcp in enumerate(time_adcp) if tctd[0] <= tadcp < tctd[1]]
+    if len(it):
+        # plt.figure()
+        # for i in it:
+        #     plt.plot(adcp['u'][i], adcp['p'][i])
+        utmean[ist,] = np.ma.masked_invalid(np.nanmean(adcp['u'][it], axis=0))
+        vtmean[ist,] = np.ma.masked_invalid(np.nanmean(adcp['v'][it], axis=0))
+        ptmean[ist,] = np.ma.masked_invalid(np.nanmean(adcp['p'][it], axis=0))
+        lonmean[ist,] = np.nanmean(adcp['lon'][it])
+        latmean[ist,] = np.nanmean(adcp['lat'][it])
+
+def mixed_layer_depth(z, sig0=False, pt=False, SA=False, CT=False, smooth=False):
+
+    # The reference depth is to avoid large part of the
+    # strong diurnal cycle in the top few meters of the ocean. Dong et al. 2008
+    ref = 20
+    iref, ref_dep = min(enumerate(z), key=lambda x: abs(abs(x[1]) - ref))
+
+    # smooth profiles with moving average
+    if sig0 is not False:
+        if smooth:
+            N = 5
+            sig0 = np.concatenate([np.mean(sig0[:N - 1]) * np.ones(N - 1, ),
+                                   np.convolve(sig0.data, np.ones((N,)) / N, mode='valid')])
+            sig0 = np.ma.masked_where(sig0 > 1e36, sig0)
+
+        # near-surface value
+        sig0_s = sig0[iref]
+
+    if pt is not False:
+        if smooth:
+            N = 5
+            pt = np.concatenate([np.mean(pt[:N - 1]) * np.ones(N - 1, ),
+                                 np.convolve(pt.data, np.ones((N,)) / N, mode='valid')])
+            pt = np.ma.masked_where(pt > 1e36, pt)
+
+        # near-surface values
+        pt_s = pt[iref]
+
+    # Mixed Layer Depth based on de Boyer Montegut et al. 2004's property difference based criteria
+    # MLD in potential density difference, fixed threshold criterion (sig0_d - sig0_s) > 0.03 kg/m^3
+    if sig0 is not False and SA is False and CT is False:
+        imld = iref + next((i for i in range(len(sig0[iref:]))
+                            if sig0[i] - sig0_s > 0.03), np.nan)
+
+    # MLD in potential temperature difference, fixed threshold criterion abs(pt_d - pt_s) > 0.2°C
+    if pt is not False:
+        imld = iref + next((i for i in range(len(pt[iref:]))
+                            if abs(pt[i] - pt_s) > 0.2), np.nan)
+
+    # MLD in potential density and potential temperature difference
+    if sig0 is not False and pt is not False:
+        imld = iref + next((i for i in range(len(sig0[iref:]))
+                            if 0.03 < abs(sig0[i] - sig0_s) < 0.125
+                            and 0.2 < abs(pt[i] - pt_s) < 1),
+                           next(i for i in range(len(sig0[iref:]))
+                                if sig0[i] - sig0_s > 0.03))
+
+    # MLD in potential density with a variable threshold criterion
+    if sig0 is not False and SA is not False and CT is not False:
+        SA_s = SA[iref]
+        CT_s = CT[iref]
+        dsig0 = sigma0(SA_s, CT_s - 0.2) - sigma0(SA_s, CT_s)
+        imld = iref + next((i for i in range(len(sig0[iref:]))
+                            if sig0[i] - sig0_s > dsig0), np.nan)
+
+    return imld, sig0, pt
+
+smooth = True
+rows, cols = 6, 4
+fig, ax = plt.subplots(rows, cols, sharex=True, sharey=True)
+imld = []
+for ist in range(nst):
+    r, c = ist // int(nst/5), int(ist/5) % 4
+
+    sig0 = ctd['sigma0'][ist,]
+    pt = ctd['pt'][ist,]
+    z = ctd['z'][ist,]
+    SA = ctd['SA'][ist,]
+    CT = ctd['CT'][ist,]
+
+    imld_dd, sig0_rm = mixed_layer_depth(z, sig0=sig0, smooth=smooth)[0:2]
+    imld_td, pt_rm = mixed_layer_depth(z, pt=pt, smooth=smooth)[0:2]
+    imld_tdd = mixed_layer_depth(z, sig0=sig0, pt=pt, smooth=smooth)[0]
+    imld_vd = mixed_layer_depth(z, sig0=sig0, SA=SA, CT=CT, smooth=smooth)[0]
+
+    ax[r,c].plot(sig0, z, 'b')
+    ax[r,c].plot(sig0_rm, z, 'b--')
+    # ax[r,c].plot(sig0[imld_dd], z[imld_dd], 'go')
+    ax[r,c].plot(sig0[imld_tdd], z[imld_tdd], 'co')
+    # ax[r,c].plot(sig0[imld_vd], z[imld_vd], 'bo')
+    ax[r,c].set_ylim([-500,0])
+
+    ax2 = ax[r,c].twiny()
+    ax2.plot(pt, z, 'r')
+    ax2.plot(pt[imld_td], z[imld_td], 'ro')
+    ax[r,c].tick_params('x', colors='b')
+    ax2.tick_params('x', colors='r')
+
+    imld.append(imld_tdd)
 
 
-# press_lvls = []
-# idp = []
-# for ip, p in enumerate(dict['press'].T):
-#     press_lvls.append(np.sum(np.isfinite(p)))
-#     if np.sum(np.isfinite(p)) > level:
-#         idp.append(ip)
-#         print(z_from_p(p, dict['lat'].T[ip]))
+# construct adcp pressure levels
+padcp = np.linspace(np.nanmin(adcp['p'][:]), np.nanmax(adcp['p'][:]), adcp.dimensions['plevel'].size)
 
-# uabs, vabs = dict['u'].copy(), dict['v'].copy()
-# for iu, (unav, vnav) in enumerate(zip(dict['unav'].T, dict['vnav'].T)):
-#     uabs[:, iu] = uabs[:, iu] + unav
-#     vabs[:, iu] = vabs[:, iu] + vnav
+# find deepest adcp measurements
+ipmax = [np.where(ptmean[ist].mask==False)[0][-1] if not all(ptmean[ist].mask) else 0
+         for ist in range(nst)]
+# pmax = [padcp[i] if np.isfinite(i) else np.nan for i in ipmax]
 
-plev_adcp = 1
+# find pressure of mixed layer depth
+pmld = [ctd['p'][i] for i in imld]
+imldadcp = [(np.abs(padcp - p)).argmin() for p in pmld]
+# pmldadcp = [padcp[i] for i in imldadcp]
 
-# transform coordinates from latlon to x,y on f-plane
-idst = slice(120, -120)
-lon_adcp = dict_adcp['lon'][0, idst]
-lat_adcp = dict_adcp['lat'][0, idst]
-h_adcp = z_from_p(dict_adcp['press'][plev_adcp, idst], lat_adcp)
+# calculate mean of velocities from surface to pressure level
+utdmean = np.array([np.nanmean(utmean[ist, slice(imldadcp[ist], ipmax[ist])]) for ist in range(nst)])
+vtdmean = np.array([np.nanmean(vtmean[ist, slice(imldadcp[ist], ipmax[ist])]) for ist in range(nst)])
 
-plev_ctd = find_closest(p_ctd, np.nanmean(dict_adcp['press'][plev_adcp]))
-h_ctd = z_from_p(np.ones(lat_ctd.shape) * p_ctd[plev_ctd], lat_ctd)
+# calculate magnitude of vectors and calculate standard deviation
+vmag = np.array([np.sqrt(utmean[ist, slice(imldadcp[ist], ipmax[ist])]**2 +
+                         vtmean[ist, slice(imldadcp[ist], ipmax[ist])]**2) for ist in range(nst)])
 
-xadcp, yadcp, zadcp = llh2enu(lon_adcp, lat_adcp, h_adcp, lon0=lon_adcp.min(), lat0=lat_adcp.min(), h0=np.nanmean(h_adcp))
-xctd, yctd, zctd = llh2enu(lon_ctd, lat_ctd, h_ctd, lon0=lon_adcp.min(), lat0=lat_adcp.min(), h0=np.nanmean(h_adcp))
+vmagstd = np.array([np.nanstd(vmag[ist]) if len(vmag[ist]) !=0 else np.nan for ist in range(nst)])
 
-
-idxs = np.array([]).astype('int')
-idxsnan = np.array([]).astype('bool')
-dict_adcpvel = {}
-for ist, station in enumerate(range(3, 102)):
-    # TODO: ask Helen if this method is correct
-    idx = find_in_circle(xadcp, yadcp, (xctd[ist], yctd[ist]), radius=5000)
-    idxs = np.append(idxs, idx)
-
-    np.nanmean(dict_adcp['u'][:, idxs], axis=1)
-
-    dict_adcpvel[station] = {}
-    umean = np.zeros(dict_adcp['press'].shape[0])
-    vmean, pmean = umean.copy(), umean.copy()
-    for plvl in range(dict_adcp['press'].shape[0]):
-        umean[plvl] = np.nanmean(dict_adcp['u'][plvl, idst][idx])
-        vmean[plvl] = np.nanmean(dict_adcp['v'][plvl, idst][idx])
-        pmean[plvl] = np.nanmean(dict_adcp['press'][plvl, idst][idx])
-
-    idxsnan = np.append(idxsnan, all(np.isnan(umean[0:24])))
-    dict_adcpvel[station]['umean'], dict_adcpvel[station]['vmean'] = umean, vmean
-    dict_adcpvel[station]['Vmag'] = (umean**2 + vmean**2)**(1/2)
-    dict_adcpvel[station]['pmean'] = pmean
-    dict_adcpvel[station]['depth'] = abs(z_from_p(pmean, lat_ctd[ist]))
+# plot velocity vectors averaged from mixed layer depth to maximum adcp depth
+std_bins = [0, 0.01, 0.02, 0.03, 0.04, 0.05]
+colors = cm.jet(np.linspace(0, 1, len(std_bins)))
+fig, ax = plt.subplots()
+Q = ax.quiver(lonmean[2:], latmean[2:], utdmean[2:], vtdmean[2:], pivot='mid', units='inches')
+qk = plt.quiverkey(Q, 0.85, 0.85, 1, r'$1 \frac{m}{s}$', labelpos='E',
+                   coordinates='figure')
+for i in range(len(std_bins)-1):
+    criteria = (vmagstd[2:] > std_bins[i]) & (vmagstd[2:] <= std_bins[i + 1])
+    label = '%s - %s' % (std_bins[i], std_bins[i+1])
+    print(criteria, label)
+    ax.scatter(lonmean[2:][criteria], latmean[2:][criteria], s=vmagstd[2:][criteria]*1e4,
+               facecolors='none', label=label, color=colors[i])
+ax.set_xlim([137.5, 144])
+ax.set_ylim([-52.5, -48])
+ax.legend(title='Standard deviation', borderpad=0.8, fontsize='medium', loc=3)
 
 # plot
-
-fig, ax = plt.subplots(1, 2, figsize=(20,8))
-ax[0].scatter(xadcp, yadcp)
-ax[0].scatter(xadcp[idxs], yadcp[idxs])
-ax[0].scatter(xctd, yctd, facecolors='k')
-ax[0].set_xlabel('x'), ax[0].set_ylabel('y')
-ax[1].scatter(lon_adcp,lat_adcp)
-ax[1].scatter(lon_ctd, lat_ctd, facecolors='k')
-ax[1].scatter(lon_ctd[idxsnan], lat_ctd[idxsnan], facecolors='r')
-ax[1].set_xlabel('lon'), ax[1].set_ylabel('lat')
-# fig.savefig(os.path.join(root, 'Figures', 'SS9802', 'map_adcp_data.png'), transparent=True)
-
-# write adcp data to file
-path = os.path.join(root, 'Analysis', 'SS9802', 'data')
-filename = 'adcp_stations'
-write_dict(dict_adcpvel, path, filename)
-
-# idts = slice(0, 7)
-# vincenty(lon_ctd[idts], lat_ctd[idts])
-
-# idx = slice(57, 71)
-# lon = np.asarray(list(reversed(lon_adcp[idx])))
-# lat = np.asarray(list(reversed(lat_adcp[idx])))
-# print(vincenty(lon, lat))
-# print(haversine(lon, lat))
+fig, ax = plt.subplots()
+idi = slice(120, -120)
+ax.scatter(adcp['lon'][idi], adcp['lat'][idi], facecolors='r', edgecolors='none')
+ax.scatter(ctd['lon'][2:, 0], ctd['lat'][2:, 0], facecolors='none', s=100)
+ax.quiver(adcp['lon'][idi], adcp['lat'][idi], adcp['u'][idi, 0], adcp['v'][idi, 0])
 
 
 
-# plt.scatter(lon,lat)
-# plt.quiver(lon, lat, dict['u'][level, 120:-120][idx], dict['v'][plev_adcp, 120:-120][idx])
-
-
-
+# xadcp, yadcp, zadcp = llh2enu(lon_adcp, lat_adcp, h_adcp, lon0=lon_adcp.min(), lat0=lat_adcp.min(), h0=np.nanmean(h_adcp))
+# xctd, yctd, zctd = llh2enu(lon_ctd, lat_ctd, h_ctd, lon0=lon_adcp.min(), lat0=lat_adcp.min(), h0=np.nanmean(h_adcp))
 
 
 nx, ny = 50, 50
