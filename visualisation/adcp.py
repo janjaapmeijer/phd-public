@@ -34,12 +34,9 @@ nst, npl = ctd.dimensions['profile'].size, adcp.dimensions['plevel'].size
 utmean, vtmean, ptmean = np.ma.masked_all((nst, npl)), np.ma.masked_all((nst, npl)), \
                         np.ma.masked_all((nst, npl))
 lonmean, latmean = np.ma.masked_all((nst,)), np.ma.masked_all((nst,))
-for ist, tctd in enumerate(time_ctd): #time_ctd[0:5]
+for ist, tctd in enumerate(time_ctd):
     it = [it for it, tadcp in enumerate(time_adcp) if tctd[0] <= tadcp < tctd[1]]
     if len(it):
-        # plt.figure()
-        # for i in it:
-        #     plt.plot(adcp['u'][i], adcp['p'][i])
         utmean[ist,] = np.ma.masked_invalid(np.nanmean(adcp['u'][it], axis=0))
         vtmean[ist,] = np.ma.masked_invalid(np.nanmean(adcp['v'][it], axis=0))
         ptmean[ist,] = np.ma.masked_invalid(np.nanmean(adcp['p'][it], axis=0))
@@ -103,6 +100,7 @@ def mixed_layer_depth(z, sig0=False, pt=False, SA=False, CT=False, smooth=False)
 
     return imld, sig0, pt
 
+# plot mixed layer depth
 smooth = True
 rows, cols = 6, 4
 fig, ax = plt.subplots(rows, cols, sharex=True, sharey=True)
