@@ -13,7 +13,6 @@ input_file_adcp = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802
 input_file_ctd = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd_gsw.nc')
 output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_adcp_ctd.nc')
 
-
 if os.path.isfile(input_file_adcp) and os.path.isfile(input_file_ctd):
     while True:
         try:
@@ -56,6 +55,7 @@ if os.path.isfile(input_file_adcp) and os.path.isfile(input_file_ctd):
                     ('latitude', 'f8', ('profile_ctd',), latmean)
             }
 
+            # store data in netcdf
             adcp = createNetCDF(output_file)
             adcp.add_dims(dim)
             adcp.create_vars(vars)
