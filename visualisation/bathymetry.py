@@ -91,9 +91,9 @@ xx, yy = np.meshgrid(xi, yi)
 Dgrd = griddata((lon_ctd, lat_ctd), D, (xx, yy), method='linear')
 
 # FIND DEPTH LEVELS OF DENSITY SURFACES
-value = 26.9
-idx = np.nanargmin(abs(sigma0-value), axis=1)
-idx2 = np.nanargmin(abs(sigma0-27.15), axis=1)
+lvl1, lvl2 = 26.85, 27.2
+idx = np.nanargmin(abs(sigma0-lvl1), axis=1)
+idx2 = np.nanargmin(abs(sigma0-lvl2), axis=1)
 z_sig1 = np.zeros(sigma0.shape[0])
 z_sig2 = np.zeros(sigma0.shape[0])
 for i in range(sigma0.shape[0]):
