@@ -89,8 +89,9 @@ if os.path.isfile(input_file):
                              7: list(reversed(range(56, 65))), 8: list(reversed(range(68, 76))), 9: list(range(76, 84)),
                              10: list(reversed(range(84, 91))), 11: list([93, 92] + list(range(94, 101)))}
 
+                # add dimension for velocity profiles
                 nv = sum(len(values)-1 for values in transects.values())
-                dim = {'profile_vel': nv}   # maximum velocity profiles per transect
+                dim = {'profile_vel': nv}   # number of velocity points
 
                 idx = 0
                 Vg = np.ma.masked_all((nv, len(nc.dimensions['plevel'])))

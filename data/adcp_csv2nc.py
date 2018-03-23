@@ -86,11 +86,11 @@ vars = {
     'v_ship':
         ('ship northward_sea_water_velocity', 'f8', ('profile',), dict_adcp['vnav'][0]),
     'p':
-        ('sea_water_pressure', 'f8', ('profile', 'plevel'), p),
+        ('sea_water_pressure', 'f8', ('profile', 'plevel',), p),
     'u':
-        ('eastward_sea_water_velocity', 'f8', ('profile', 'plevel'), dict_adcp['u'].T),
+        ('eastward_sea_water_velocity', 'f8', ('profile', 'plevel',), dict_adcp['u'].T),
     'v':
-        ('northward_sea_water_velocity', 'f8', ('profile', 'plevel'), dict_adcp['v'].T)
+        ('northward_sea_water_velocity', 'f8', ('profile', 'plevel',), dict_adcp['v'].T)
 }
 
 # save data in netcdf file using OceanPy's createNetCDF class
