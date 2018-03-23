@@ -110,8 +110,8 @@ if os.path.isfile(input_file):
                     idx += nst
 
                 # import matplotlib.pyplot as plt
-                # plt.scatter(lon_mid, lat_mid, s=100)
-                # plt.plot(lon_mid, lat_mid, 'k')
+                # plt.scatter(lonv, latv, s=100)
+                # plt.plot(lonv, latv, 'k')
                 # plt.scatter(lon[2:], lat[2:], facecolors='r')
 
                 vars = {
