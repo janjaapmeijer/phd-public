@@ -75,13 +75,13 @@ if os.path.isfile(input_file):
                 p, lon, lat = nc['p'][:], nc['lon'][:,0][:, np.newaxis], nc['lat'][:,0][:, np.newaxis]
 
                 # convert in-situ variables to gsw variables
-                p_ref = 1500
+                p_ref = 1494 # shallowest profile (4) except (34) which goes until 1004
 
                 SA = SA_from_SP(nc['SP'][:], p, lon, lat)
                 CT = CT_from_t(SA, nc['t'][:], p)
                 pt = pt_from_t(SA, nc['t'][:], p, p_ref)
 
-                deltaD = geo_strf_dyn_height(SA.data, CT.data, p, p_ref=p_ref, axis=1)
+                deltaD = np.ma.masked_invalid(geo_strf_dyn_height(SA.data, CT.data, p, p_ref=p_ref, axis=1))
 
                 # transect stations
                 transects = {1: list(reversed(range(2, 10))), 2: list(range(10, 18)), 3: list(reversed(range(18, 27))),

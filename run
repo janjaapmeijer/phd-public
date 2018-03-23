@@ -8,3 +8,8 @@ python data/ctd_csv2nc.py # && ncdump -h $NC_DIR/ss9802_ctd.nc
 python data/ctd_gsw.py # && ncdump -h $NC_DIR/ss9802_ctd_gsw.nc
 
 source activate ocean2 && python data/ctd_gsw.py && ncdump -h $NC_DIR/ss9802_ctd_gsw.nc
+
+source activate ocean3
+
+python data/adcp_csv2nc.py
+python data/adcp_ctd.py && ncdump -h $NC_DIR/ss9802_adcp_ctd.nc
