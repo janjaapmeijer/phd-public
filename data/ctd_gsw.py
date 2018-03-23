@@ -100,8 +100,8 @@ if os.path.isfile(input_file):
 
                     geo_strf = deltaD[stations, :].T
 
-                    lon_ts = nc['lon'][stations, 0]
-                    lat_ts = nc['lat'][stations, 0]
+                    lon_ts = nc['lon'][stations, 1]
+                    lat_ts = nc['lat'][stations, 1]
 
                     gv, lon_mid, lat_mid = geostrophic_velocity(geo_strf, lon_ts, lat_ts, p[:, np.newaxis])
 
