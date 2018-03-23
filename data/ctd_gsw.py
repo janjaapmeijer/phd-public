@@ -8,7 +8,8 @@ from OceanPy.netcdf import createNetCDF
 import numpy as np
 
 if sys.version_info[0] == 3:
-    from gsw import grav, SA_from_SP, CT_from_t, pt_from_t, z_from_p, sigma0, geo_strf_dyn_height, spiciness0
+    from gsw import SA_from_SP, CT_from_t, pt_from_t, sigma0, spiciness0, \
+        z_from_p, grav, geo_strf_dyn_height, geostrophic_velocity
 if sys.version_info[0] == 2:
     from pygamman import gamman as nds
 
@@ -23,7 +24,7 @@ output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd
 
 
 # 1) CALCULATE TEOS-10 VARIABLES IN PYTHON3
-gsw_vars = ('SA', 'CT', 'g', 'z', 'pt', 'sigma0', 'spiciness0', 'deltaD', 'gamman') #, 'deltaD'
+gsw_vars = ('SA', 'CT', 'g', 'z', 'pt', 'sigma0', 'spiciness0', 'deltaD', 'lonv', 'latv', 'Vg', 'gamman') #, 'deltaD'
 
 if os.path.isfile(input_file):
     while True:
@@ -82,6 +83,37 @@ if os.path.isfile(input_file):
 
                 deltaD = geo_strf_dyn_height(SA.data, CT.data, p, p_ref=p_ref, axis=1)
 
+                # transect stations
+                transects = {1: list(reversed(range(2, 10))), 2: list(range(10, 18)), 3: list(reversed(range(18, 27))),
+                             4: list(range(26, 34)), 5: list(reversed(range(36, 46))), 6: list(range(46, 57)),
+                             7: list(reversed(range(56, 65))), 8: list(reversed(range(68, 76))), 9: list(range(76, 84)),
+                             10: list(reversed(range(84, 91))), 11: list([93, 92] + list(range(94, 101)))}
+
+                nv = sum(len(values)-1 for values in transects.values())
+                dim = {'profile_vel': nv}   # maximum velocity profiles per transect
+
+                idx = 0
+                Vg = np.ma.masked_all((nv, len(nc.dimensions['plevel'])))
+                lonv, latv = np.ma.masked_all((nv,)), np.ma.masked_all((nv,))
+                for transect, stations in transects.items():
+
+                    geo_strf = deltaD[stations, :].T
+
+                    lon_ts = nc['lon'][stations, 0]
+                    lat_ts = nc['lat'][stations, 0]
+
+                    gv, lon_mid, lat_mid = geostrophic_velocity(geo_strf, lon_ts, lat_ts, p[:, np.newaxis])
+
+                    nst = gv.shape[1]
+                    Vg[idx:idx+nst] = np.ma.masked_invalid(gv).T
+                    lonv[idx:idx+nst], latv[idx:idx+nst] = lon_mid, lat_mid
+                    idx += nst
+
+                # import matplotlib.pyplot as plt
+                # plt.scatter(lon_mid, lat_mid, s=100)
+                # plt.plot(lon_mid, lat_mid, 'k')
+                # plt.scatter(lon[2:], lat[2:], facecolors='r')
+
                 vars = {
                     'SA':
                         ('sea_water_absolute_salinity', 'f8', ('profile', 'plevel', ), SA),
@@ -99,10 +131,17 @@ if os.path.isfile(input_file):
                         ('sea_water_spiciness', 'f8', ('profile', 'plevel', ), spiciness0(SA, CT)),
                     'deltaD':
                         ('dynamic_height_anomaly', 'f8', ('profile', 'plevel', ), deltaD),
+                    'lonv':
+                        ('longitude', 'f8', ('profile_vel', ), lonv),
+                    'latv':
+                        ('latitude', 'f8', ('profile_vel', ), latv),
+                    'Vg':
+                        ('geostrophic_sea_water_velocity', 'f8', ('profile_vel', 'plevel', ), Vg)
                 }
 
                 # save data in netcdf file using OceanPy's createNetCDF class
                 nc = createNetCDF(output_file)
+                nc.add_dims(dim)
                 nc.create_vars(vars)
                 nc.close()
 
