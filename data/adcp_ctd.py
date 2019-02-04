@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0,'..')
 from _setup import *
 
 from shutil import copyfile
@@ -9,9 +11,9 @@ warnings.filterwarnings('ignore')
 
 from OceanPy.netcdf import createNetCDF
 
-input_file_adcp = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_adcp.nc')
+input_file_adcp = os.path.join(datadir, 'processed', 'ss9802', 'adcp', 'ss9802_adcp.nc')
 input_file_ctd = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd_gsw.nc')
-output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_adcp_ctd.nc')
+output_file = os.path.join(datadir, 'processed', 'ss9802', 'adcp', 'ss9802_adcp_ctd.nc')
 
 if os.path.isfile(input_file_adcp) and os.path.isfile(input_file_ctd):
     while True:

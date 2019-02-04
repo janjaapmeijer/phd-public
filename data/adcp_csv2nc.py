@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0,'..')
 from _setup import *
 
 from scipy.io import loadmat
@@ -35,7 +37,7 @@ for it, (t, nobs) in enumerate(zip(times, df.groupby(['START_TIME']).size())):
 
 # READ DATA IN DICTINOARY
 input_file = os.path.join(datadir, 'processed', 'ss9802', 'steve', 'ss9802_adcp_qc.mat')
-output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_adcp.nc')
+output_file = os.path.join(datadir, 'processed', 'ss9802', 'adcp', 'ss9802_adcp.nc')
 
 dict_adcp = loadmat(input_file)
 

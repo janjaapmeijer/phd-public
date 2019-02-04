@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0,'..')
 from _setup import *
 
 from datetime import datetime
@@ -12,7 +14,7 @@ from OceanPy.netcdf import createNetCDF
 
 # LOAD DATA
 input_file = os.path.join(datadir, 'processed', 'ss9802', 'trawler', 'ctd', 'O&A_SS199802_ctd_trawler.csv')
-output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd.nc')
+output_file = os.path.join(datadir, 'processed', 'ss9802', 'ctd', 'ss9802_ctd.nc')
 
 if not os.path.exists(os.path.dirname(output_file)):
     os.makedirs(os.path.dirname(output_file))
