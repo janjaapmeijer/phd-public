@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0,'..')
 from _setup import *
 
 from shutil import copyfile
@@ -13,8 +15,8 @@ if sys.version_info[0] == 3:
 if sys.version_info[0] == 2:
     from pygamman import gamman as nds
 
-input_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd.nc')
-output_file = os.path.join(datadir, 'processed', 'ss9802', 'netcdf', 'ss9802_ctd_gsw.nc')
+input_file = os.path.join(datadir, 'processed', 'ss9802', 'ctd', 'ss9802_ctd.nc')
+output_file = os.path.join(datadir, 'processed', 'ss9802', 'ctd', 'ss9802_ctd_gsw.nc')
 
 
 #3) input exists, output exists, vars exist, gamman not
@@ -46,14 +48,15 @@ if os.path.isfile(input_file):
                     gamman = np.ma.masked_all((len(nc.dimensions['profile']), len(nc.dimensions['plevel'])))
                     for i in range(0, len(nc.dimensions['profile'])):
                         try:
-                            gn = nds.gamma_n(nc['SP'][i,].data, nc['t'][i,].data, p, p.size, nc['lon'][0, 0],
-                                             nc['lat'][0, 0])[0]
+                            gn = nds.gamma_n(nc['SP'][i,].data, nc['t'][i,].data, p, p.size, nc['lon'][i, 0],
+                                             nc['lat'][i, 0])[0]
                             mask = nc['SP'][i,].mask | nc['t'][i,].mask
                             gn[mask] = np.nan
                         except AttributeError:
-                            pass
+                            gn = np.zeros(len(nc.dimensions['plevel']))
+                            gn[:] = np.nan
                         except Exception as e:
-                            gn = nds.gamma_n(nc['SP'][i,], nc['t'][i,], p, p.size, nc['lon'][0, 0], nc['lat'][0, 0])[0]
+                            gn = nds.gamma_n(nc['SP'][i,], nc['t'][i,], p, p.size, nc['lon'][i, 0], nc['lat'][i, 0])[0]
                         gamman[i,] = gn
 
                     var = {
@@ -72,7 +75,7 @@ if os.path.isfile(input_file):
             else:
 
                 # change one dimension variables to two dimensions
-                p, lon, lat = nc['p'][:], nc['lon'][:,0][:, np.newaxis], nc['lat'][:,0][:, np.newaxis]
+                p, lon, lat = nc['p'][:], nc['lon'][:, 0][:, np.newaxis], nc['lat'][:, 0][:, np.newaxis]
 
                 # convert in-situ variables to gsw variables
                 p_ref = 1494 # shallowest profile (4) except (34) which goes until 1004
