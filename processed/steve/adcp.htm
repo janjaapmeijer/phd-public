@@ -1,0 +1,559 @@
+
+<HTML>
+<HEAD> <TITLE>Data Processing - ADCP file formats</TITLE>  </HEAD>
+<BODY BGCOLOR="#FFFFFF">
+<P>
+<center><img src="../../web_art/process3.gif" WIDTH=200></center>
+<P>
+<CENTER><H3>ADCP file formats - CSIRO ASCII format</H3></CENTER>
+<h3>0.1. Naming convention</h3>
+The ASCII ADCP profile files have names of the general form
+<BLOCKQUOTE>
+a bb cc [dd] . e ff
+</BLOCKQUOTE>
+Below, every variation of each portion of the filename
+is highlighted and explained:<BR>
+<br>
+</FONT>
+<center>
+<TABLE>
+<TR><TD WIDTH=170><B>f </FONT></B>9503.agp</FONT>
+</TD><TD WIDTH=366>20 minute integrated profiles (originally stood for 'Franklin')</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><B>f </FONT></B>9503</FONT><B>_60</FONT></B>.agp</FONT>
+</TD><TD WIDTH=366>60 minute integrated profiles</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><B>e_ </FONT></B>9503.agp</FONT>
+</TD><TD WIDTH=366>ensemble (non-integrated) profiles</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><I>f </FONT></I><B>95 </FONT></B>03.agp</FONT>
+</TD><TD WIDTH=366>year of cruise</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><I>f95 </FONT></I><B>03 </FONT></B>.agp</FONT>
+</TD><TD WIDTH=366>cruise number</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><I>f9503 </FONT></I><B>01 </FONT></B><I>.agp</FONT></I>
+</TD><TD WIDTH=366>consecutive numbering where more than one file required. A new file is started each time there is a change in the data collection parameters which is sufficient to alter the interpretation of the data. For example, change in the number of bins sampled would not warrant a new file, but change of bin length would because that changes the depths corresponding to each bin.</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><I>f9503</FONT></I>. </FONT><B>a </FONT></B><I>gp</FONT></I>
+</TD><TD WIDTH=366>water velocities given are relative to the ship. The user must add in the ship's velocity from each profile header record to get absolute currents (as described later).</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><I>f9503</FONT></I>. </FONT><B>c </FONT></B><I>gp</FONT></I>
+</TD><TD WIDTH=366>absolute or 'corrected' currents are given.</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><I>f9503.a </FONT></I><B>tr</FONT></B>
+</TD><TD WIDTH=366>Transit navigation corrected profiles</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><I>f9503.a </FONT></I><B>gp</FONT></B>
+</TD><TD WIDTH=366>GPS navigation corrected profile<B>s</B></FONT>
+</TD></TR>
+<TR><TD WIDTH=170><I>f9503.a </FONT></I><B>bt</FONT></B>
+</TD><TD WIDTH=366>Bottom Track corrected profiles</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><I>f9503.a </FONT></I><B>sh</FONT></B>
+</TD><TD WIDTH=366><FONT SIZE=3 FACE="Times">uncorrected profiles - useful only for relative or <B>sh</B>ear data</FONT>
+</TD></TR>
+<TR><TD WIDTH=170><I>f9503.a </FONT></I><B>ny</FONT></B>
+</TD><TD WIDTH=366>a variety of correction types used.</FONT>
+</TD></TR>
+</TABLE>
+</center>
+<P>
+<h3>0.2. Quality Control Statistics</h3>
+The
+basic quality control statistic is a composite of the two major
+data quality statistics produced by the logging system. It is:
+<P>
+<BLOCKQUOTE>
+</FONT><B>avqc</FONT></B>
+= %Good / ( Verr +  0.05 )
+<P>
+where:
+<p>
+<center>
+<TABLE>
+<TR><TD WIDTH=170> %Good</FONT></TD>
+<TD WIDTH=272>Percent Good pings after logging system screening</FONT>
+</TD></TR>
+<TR><TD WIDTH=170>Verr</FONT></TD>
+<TD WIDTH=272>RMS Error Velocity in m/s. (In cruises prior to Fr 11/88 the &quot;95% confidence interval&quot; is used instead)</FONT>
+</TD></TR>
+</TABLE>
+</center>
+<p>
+</BLOCKQUOTE>
+This statistic is then a number with an possible range of 0-20,
+and an expected range of 0-10, with values of 0 to 4 indicating
+very poor data, and values above 8 being very good data. This
+statistic exists for each bin of each profile.The other quality
+statistic, called ipcok, comes from the profile integrating process.
+ It is also referred to as the  &quot;attendance percentage&quot;.For
+each bin, it is the percentage of the profile period for which
+the data was acceptable. That is, if the data in a given bin (depth
+level) was usable in only half the ensembles during a given integration
+period, then for that bin ipcok=50.
+<P>
+<h3>0.3. Calculating the Bin Depth</h3>
+The
+depth to the centre of bin j, in metres, is approximately:
+<P>
+<BLOCKQUOTE>
+  depth(j)  =  draught +  (plen + blen)/2
+ +  delay + blen*(j-1) + blen/10</FONT>
+<P>
+</BLOCKQUOTE>
+where</FONT>
+<P>
+ <BLOCKQUOTE>
+draught  - 4 m</FONT>
+<P>
+ blen  - bin length</FONT>
+<P>
+ plen  - pulse length</FONT>
+<P>
+ delay - delay after transmit (also
+known as DTFB - Depth To First Bin).
+</BLOCKQUOTE>
+The depth bins are generated
+by the instrument using the assumption of a sound speed of 1475
+m/s. The above approximation can therefore be refined by correcting
+for the approximate real sound speed, that is, by multiplying
+the above-derived depth by (estimated_real_sound_speed) / 1475.
+This sound speed estimate would be made by estimating the mean
+temperature, salinity and depth for the main study area.<BR>
+</FONT>
+<P>
+<h3>1. Header records</h3>
+All
+files have the same format for the first three records.
+<p>
+<B>Record
+1</FONT></B>:
+ is empty or has the version number of the processing system.
+</FONT><B>
+<p>
+Record 2</FONT></B>:
+ Contains the Data Acquisition System parameters for this data.
+The only thing of interest to you here are the first four values,
+which enable you to calculate depth of bins and maximum depth
+of sampling.</FONT>
+<P>
+<BLOCKQUOTE>
+ read( 4,1000 )</FONT><B>
+ibin, iblen, iplen, idelay</FONT></B><FONT SIZE=3 >,
+tping, ibt, hcor, xcor, ichead, refon, refb1, refb2, evmax, wmax,
+bwmax</FONT>
+<P>
+1000    format( </FONT><B>x,
+4i4</FONT></B><FONT SIZE=3 >, i5,
+6x, i2, 2f6.2, 2i2, 2i4, 2f6.2, i5 )</FONT>
+</BLOCKQUOTE>
+where:</FONT>
+<center>
+<TABLE>
+<TR><TD WIDTH=106><B>ibin</FONT></B>
+</TD><TD WIDTH=194>number of bins to sample</FONT>
+</TD></TR>
+<TR><TD WIDTH=106><B>iblen</FONT></B>
+</TD><TD WIDTH=194>length of bins (in vertical metres)</FONT>
+</TD></TR>
+<TR><TD WIDTH=106><B>iplen</FONT></B>
+</TD><TD WIDTH=194>length of pulses (in vertical metres)</FONT>
+</TD></TR>
+<TR><TD WIDTH=106><B>idelay</FONT></B>
+</TD><TD WIDTH=194>delay after transmit (in vertical metres)</FONT>
+</TD></TR>
+<TR><TD WIDTH=106>tping</FONT></TD>
+<TD WIDTH=194>minimum time between pings</FONT>
+</TD></TR>
+<TR><TD WIDTH=106>ibt</FONT></TD><TD WIDTH=194>1 =&gt; bottom tracking enabled</FONT>
+</TD></TR>
+<TR><TD WIDTH=106>hcor</FONT></TD>
+<TD WIDTH=194>heading or compass correction applied at acquisition</FONT>
+</TD></TR>
+<TR><TD WIDTH=106>xcor</FONT></TD>
+<TD WIDTH=194>transducer rotation correction applied at acquisition</FONT>
+</TD></TR>
+<TR><TD WIDTH=106>ichead</FONT></TD>
+<TD WIDTH=194>1 =&gt; currents rotated to geographic coordinates</FONT>
+</TD></TR>
+<TR><TD WIDTH=106>refon,refb1,refb2 </FONT>
+</TD><TD WIDTH=194>realtime reference layer averaging setup</FONT>
+</TD></TR>
+<TR><TD WIDTH=106>evmax</FONT></TD>
+<TD WIDTH=194>threshold for ping by ping data rejection on basis of error velocities (m/s)</FONT>
+</TD></TR>
+<TR><TD WIDTH=106>wmax</FONT></TD>
+<TD WIDTH=194>vertical velocity realtime threshold (m/s)</FONT>
+</TD></TR>
+<TR><TD WIDTH=106>bwmax</FONT></TD>
+<TD WIDTH=194>bandwidth data screen threshold (actually inactive)</FONT>
+</TD></TR>
+</TABLE>
+</center>
+<B>Record 3</B>:  Processing run parameters. Users should not need to
+be concerned with this.
+<P>
+<BLOCKQUOTE>
+read( 4,1001 ) alnang, scfact, lcor, lref, irefmin, iref1, iref,
+isrbin, atndmin, icovmin,     minpcbt, 
+<br>
+maxdel, btemax, lreqts, code
+<br>
+1001      format( f5.1,f7.4,x,l1,x,l1,i2,2i3,3i4,2i3,f4.2,x,l1,x,a)
+</BLOCKQUOTE>
+<BR>
+<BR>
+<P>
+<h3>2. General data format</h3>The
+3 header records are described in &quot;Header records&quot;.
+After these, the rest of the file comprises profiles which are
+read in the following manner:</FONT>
+<P>
+<TABLE>
+<TR><TD WIDTH=54></TD><TD COLSPAN=2 WIDTH=652><FONT SIZE=2 FACE="Courier">read( 4,1000,end=900 ) cstart, icover, lastgd, unav, vnav, cnav, alon, alat, ibcover, ibot, iqc1, iqc2, iper</FONT>
+</TD></TR>
+<TR><TD WIDTH=54></TD><TD COLSPAN=2 WIDTH=652><FONT SIZE=2 FACE="Courier">do i = 1,lastgd,4</FONT>
+</TD></TR>
+<TR><TD WIDTH=54></TD><TD WIDTH=47></TD><TD WIDTH=605><FONT SIZE=2 FACE="Courier">last = min( i+3,lastgd )</FONT>
+</TD></TR>
+<TR><TD WIDTH=54></TD><TD WIDTH=47></TD><TD WIDTH=605><FONT SIZE=2 FACE="Courier">read( 4,1100 ) ( u(j),v(j),avqc(j),ipcok(j), j =i,last )</FONT>
+</TD></TR>
+<TR><TD WIDTH=54></TD><TD COLSPAN=2 WIDTH=652><FONT SIZE=2 FACE="Courier">enddo</FONT>
+</TD></TR>
+<TR><TD WIDTH=54><FONT SIZE=2 FACE="Courier">1000</FONT></TD>
+<TD COLSPAN=2 WIDTH=652><FONT SIZE=2 FACE="Courier">format( x, a20, i3, i4, 2f7.3, x, a3, 2f8.3, i3, i5, 2i3, i5 )</FONT>
+</TD></TR>
+<TR><TD WIDTH=54><FONT SIZE=2 FACE="Courier">1100</FONT></TD>
+<TD COLSPAN=2 WIDTH=652><FONT SIZE=2 FACE="Courier">format( 4( 2f6.2, f4.1, i4 ) )</FONT>
+</TD></TR>
+</TABLE>
+</FONT><U>where</FONT></U>
+<br>
+<center>
+<TABLE>
+<TR><TD WIDTH=106>cstart </FONT></TD>
+<TD WIDTH=194>character*20  start date and time</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>icover</FONT></TD>
+<TD WIDTH=194>percentage of averaging period covered by acceptable ensembles</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>lastgd</FONT></TD>
+<TD WIDTH=194>bottom-most accepted bin in this profile</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>unav</FONT></TD>
+<TD WIDTH=194>ship's East-West velocity for the profile (m/s, +ve East)</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>vnav</FONT></TD>
+<TD WIDTH=194>ship's  North-South velocity for the profile (m/s, +ve North)</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>cnav</FONT></TD>
+<TD WIDTH=194>character*3  navigation type code: </FONT>
+</TD><TD WIDTH=155>  </FONT></TD></TR>
+<TR><TD WIDTH=106></TD><TD WIDTH=194>cnav(1:1) = 'B'   </FONT>
+</TD><TD WIDTH=155>Bottom track velocity</FONT>
+</TD></TR>
+<TR><TD WIDTH=106></TD><TD WIDTH=194>cnav(2:2) = 'P'</FONT>
+</TD><TD WIDTH=155>GPS position-derived velocity</FONT>
+</TD></TR>
+<TR><TD WIDTH=106></TD><TD WIDTH=194>cnav(3:3) = 'D' </FONT>
+</TD><TD WIDTH=155>GPS direct velocity</FONT>
+</TD></TR>
+<TR><TD WIDTH=106></TD><TD WIDTH=194>cnav = 'BTr'    </FONT>
+</TD><TD WIDTH=155>Bottom track velocity</FONT>
+</TD></TR>
+<TR><TD WIDTH=106></TD><TD WIDTH=194>cnav = 'Unc'    </FONT>
+</TD><TD WIDTH=155>No navigation velocity (uncorrected)</FONT>
+</TD></TR>
+<TR><TD WIDTH=106></TD><TD WIDTH=194>cnav = 'rel'    </FONT>
+</TD><TD WIDTH=155>&quot;navigation&quot; velocity is actually that of some reference layer, so corrected velocities will be relative to that layer.</FONT>
+</TD></TR>
+<TR><TD WIDTH=106>alon</FONT></TD>
+<TD WIDTH=194>mean longitude of the profile, real degrees, +east</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>alat</FONT></TD>
+<TD WIDTH=194>mean latitude of the profile, real degrees, +north</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>ibcover</FONT></TD>
+<TD WIDTH=194>percentage of interfix period for which there was bottom depth information</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>ibot</FONT></TD>
+<TD WIDTH=194>mean bottom depth of ensembles for which a bottom depth was available</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>iqc1</FONT></TD>
+<TD WIDTH=194>mean of bottom track error velocity (BT correction only)</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>iqc2</FONT></TD>
+<TD WIDTH=194>mean of ensemble percent good bottom track pings (BT correction only).</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>iper</FONT></TD>
+<TD WIDTH=194>integration period in seconds</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>u(j)</FONT></TD>
+<TD WIDTH=194>East-West velocity of currents relative to ship, for each bin, m/s, +ve East</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>v(j)</FONT></TD>
+<TD WIDTH=194>North-South velocity of currents relative to ship, for each bin, m/s, +ve north</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>avqc(j)</FONT></TD>
+<TD WIDTH=194>Quality Control value for each bin. This is the mean of the basic QC statistic for this bin. (See section 0.2)  In the case of ensemble files (e_*), avqc(j) is simply the Verr (see Section 4.3).</FONT>
+</TD><TD WIDTH=155></TD></TR>
+<TR><TD WIDTH=106>ipcok(j)</FONT></TD>
+<TD WIDTH=194>the &quot;attendance percentage&quot;, or the percentage of the profile period for which there was good data in this bin.</FONT>
+</TD><TD WIDTH=155></TD></TR>
+</TABLE>
+</center>
+Note that the water velocities given are relative to the ship.
+To get absolute currents, add unav to u(j) and vnav to v(j). That
+is:
+<p>
+<font face="Courier">
+<BLOCKQUOTE>
+do j = 1,lastgd<br>
+<BLOCKQUOTE>
+Ucorrected(j) = unav + u(j)<br>
+Vcorrected(j) = vnav + v(j)<br>
+</BLOCKQUOTE>
+enddo
+</BLOCKQUOTE>
+</font>
+<p>
+
+
+To minimise the effects of gaps in data, either reference layer
+averaging or pre-corrected integration may have been used. Such
+details of the processing method are reported in the summary file
+and possibly the Data Report. Documentation is available describing
+these treatments.
+<P>
+<h3> 2.1 Example  - Contents of file f890701.agp</h3>
+The record
+numbers on the left are there for clarity - they are not present
+in the actual file.
+<p>
+<FONT SIZE=2>
+<BR>
+<P>
+1:
+<P>
+2:  60   8   8   4  100  35.50  1  0.00  0.00  1  1  3   6 0.50
+9.90  999
+<P>
+3:
+<P>
+4:  17-MAY-89 16:40:00  79  39  3.140  -5.533  D  158.713  -40.391
+  79  4735  0 0 1200
+<P>
+5:  -2.87  5.67  7.3  79    -2.81  5.65  8.1  79    -2.80  5.64
+ 8.4  76    -2.79  5.65  8.6  76
+<P>
+6:  -2.78  . . .
+<P>
+       .
+<P>
+       .
+<P>
+       . <BR>
+<P>
+</FONT>
+<P>
+<h3>2.1.1. Interpretation</h3>The
+top 3 records are the header described in &quot;Header records&quot;
+. The first profile began at 16:40 on 17-May-89 (UTC),
+icover is 79%, the deepest good bin is bin 39, the GPS ship's
+velocity is unav = 3.140,    vnav = -5.533 m/s, only Direct GPS
+velocities were used, the mean position during this profile was
+158.713 E   40.391 S,  bottom information was available for 79%
+of the profile, mean bottom depth was 4735 m, and averaging period
+was 20 minutes.By adding in the ship's velocity, the absolute
+or corrected water velocities are obtained.</FONT>
+<P>
+The first 3 bins for the shown profile
+are:</FONT>
+
+<center>
+<TABLE>
+<TR><TD WIDTH=73>bin</FONT></TD><TD WIDTH=66>calc depth</FONT>
+</TD><TD WIDTH=72>ship-relative</FONT></TD>
+<TD WIDTH=101>velocity</FONT></TD><TD WIDTH=80>absolute</FONT>
+</TD><TD WIDTH=77>velocity</FONT></TD>
+<TD WIDTH=65>avqc</FONT></TD><TD WIDTH=58>ipcok</FONT>
+</TD></TR>
+<TR><TD WIDTH=73></TD><TD WIDTH=66>(m)</FONT>
+</TD><TD WIDTH=72>u</FONT></TD><TD WIDTH=101>v</FONT>
+</TD><TD WIDTH=80>u</FONT></TD><TD WIDTH=77>v</FONT>
+</TD><TD WIDTH=65></FONT></TD><TD WIDTH=58>%
+</TD></TR>
+<TR><TD WIDTH=73>1</FONT></TD><TD WIDTH=66>16.8</FONT>
+</TD><TD WIDTH=72>-2.87</FONT></TD>
+<TD WIDTH=101>5.67</FONT></TD><TD WIDTH=80>0.27</FONT>
+</TD><TD WIDTH=77>0.14</FONT></TD>
+<TD WIDTH=65>7.3</FONT></TD><TD WIDTH=58>79</FONT>
+</TD></TR>
+<TR><TD WIDTH=73>2</FONT></TD><TD WIDTH=66>24.8</FONT>
+</TD><TD WIDTH=72>-2.81</FONT></TD>
+<TD WIDTH=101>5.65</FONT></TD><TD WIDTH=80>0.33</FONT>
+</TD><TD WIDTH=77>0.12</FONT></TD>
+<TD WIDTH=65>8.1</FONT></TD><TD WIDTH=58>79</FONT>
+</TD></TR>
+<TR><TD WIDTH=73>3</FONT></TD><TD WIDTH=66>32.8</FONT>
+</TD><TD WIDTH=72>-2.80</FONT></TD>
+<TD WIDTH=101>5.64</FONT></TD><TD WIDTH=80>0.34</FONT>
+</TD><TD WIDTH=77>0.11</FONT></TD>
+<TD WIDTH=65>8.4</FONT></TD><TD WIDTH=58>76</FONT>
+</TD></TR>
+</TABLE>
+</center><P>
+<h3>3. Summary files</h3>A
+summary file may accompany each dataset. It list specifics of
+the treatments used in processing that dataset, then lists the
+name of each data file and the total number of profiles and good
+bins in the dataset.Summary files have the same name as the first
+file in a dataset, but with an additional suffix of &quot;.sum&quot;</FONT>
+<P>
+<h3>3.0.1. Example  -  &quot;f890701.agp.sum&quot;
+<BR>
+<BR>
+</h3>
+<P>
+<BLOCKQUOTE>
+ SUMMARY OF ADCP PROFILES FOR FR8907</FONT>
+<P>
+Correction code is dp</FONT>
+<br>
+3beam correction is not being applied</FONT>
+<br>
+Data frm Start of cruise to End of
+cruise in 20 minute integrals using reference layer averaging.
+Ref layer bins  3, 6       Refmin  1</FONT>
+<br>
+Calibration constants:  alpha  1.44
+   beta  1.0065</FONT>
+<br>
+Gyro post-corrected</FONT>
+<br>
+Warning threshold for dv/dt between
+ensemble:   0.0025 m/s/s</FONT>
+<br>
+Min &quot;icover&quot;:  30,     Min
+attendance for any bin:   15<p>
+</FONT>
+<p>
+f890701.agp   First ens is # 1 of file
+ 1<BR>
+</FONT>
+<p>
+Deepest profile goes to depth  408
+<BR>
+</FONT>
+<P>
+2137 profiles with a total of   32433
+bins produced.</FONT>
+<P>
+</BLOCKQUOTE>
+<h3>4. Notes on specific file types</h3>
+<H3>4.1 .agp suffix files  -  profiles with GPS correction</h3>The
+profiles generated by combining ADCP and GPS navigation data are
+contained in files with the .agp suffix.  There are two types
+of GPS data used to generate ensemble velocities:
+<P>
+<BLOCKQUOTE>
+ - direct velocity data generated by
+the Ashtech OEM GPS Sensor, which is reduced to an average for
+each ensemble.</FONT>
+<P>
+- position-derived
+velocity, which is derived from the ensemble end positions.
+</BLOCKQUOTE>
+Which
+type(s) of GPS velocities are used in any profile are indicated
+by the </FONT><I>cnav</FONT></I>
+flag in the profile header.</FONT>
+<P>
+<h3>4.2 .abt suffix files  - bottom
+track correction </h3>Where
+Bottom Track has been used, the summary file lists four extra
+processing parameters. These are unlikely to be of interest to
+the user, but are described below:</FONT>
+<center>
+<TABLE>
+<TR><TD WIDTH=170>btemax  </FONT></TD>
+<TD WIDTH=366>bottom-track velocities are rejected if the rms bottom-track error velocity exceeds the given threshold (in m/s).</FONT>
+</TD></TR>
+<TR><TD WIDTH=170>minpcbt</FONT></TD>
+<TD WIDTH=366>bottom-track velocites are rejected for any ensemble where the bottom track percentage good of is less than the given threshold</FONT>
+</TD></TR>
+<TR><TD WIDTH=170>minbt</FONT></TD>
+<TD WIDTH=366>as above, except set a limit on the absolute number as well as the percentage to catch sparse bottom track in small ensembles.</FONT>
+</TD></TR>
+<TR><TD WIDTH=170>maxdel</FONT></TD>
+<TD WIDTH=366>reject ensembles where RDI bottom depth is more than 6 metres different from the chosen &quot;correct&quot; depth (usually from the PDR).</FONT>
+</TD></TR>
+</TABLE>
+</center>
+<P>
+<h3>4.3 .any suffix files  -  profiles
+with bottom track and/or GPS correction</h3>The
+profiles generated by combining ADCP data with Bottom Track or
+GPS navigation data are contained in files with the .any suffix.
+The type(s) of navigation data which have been used in any profile
+are indicated by the </FONT><I>cnav</FONT></I>
+flag in the profile header (i.e. &quot;B&quot; for Bottom Track,
+&quot;P&quot; for position-derived velocity, and &quot;D&quot;
+for direct velocity data).  The preference with which the navigational
+data has been applied is indicated by the last field in the third
+line of the .any file.  e.g. &quot;bpd&quot; means that bottom
+track corrected ensemble data has been used in preference to ensemble
+data corrected using position-derived ship's velocity, which in
+turn has been used in preference to ensemble data corrected using
+direct velocity data.</FONT>
+<P>
+<h3>4.4 e_  prefix files  -  no averaging
+done while processing</h3>These
+files contain the originally logged (usually 3 minute) averages,
+after screening and calibration. The quality statistics for each
+bin have different interpretations for this non-port-averaged
+data:
+<p>
+<BLOCKQUOTE>
+- the avqc value can be ignored (it is simply the error velocity
+in m/s.)
+<P>
+- ipcok is now the %Good value. Lower
+values correspond to less reliable data.<BR>
+</BLOCKQUOTE>
+
+<P>
+<center><I>Source Doc: /dpg/dpg/dop/doc
+<br>
+Version: 3 Oct 1997 (Helen Beggs)
+<br>
+Author: Jeff Dunn
+  CSIRO  Division of Oceanography  1995</I><center>
+<BR>
+<hr>
+<br><center><font size=-1>&copy; Copyright 1997, CSIRO Australia</font></center>
+<br><center><font size=-1>Use of this web site and information available from it is subject to our<br><a href="http://www.csiro.au/legalnotices/disclaimer.html">Legal Notice and Disclaimer</a></font></center>
+<br>
+
+<BR>
+<center>
+<I>This page last updated: 19 November 1997</I>
+</CENTER>
+<br>
+<hr>
+<CENTER>
+<TABLE CELLPADDING=5>
+<TR><TD ALIGN=CENTER><A href="../process.htm"><IMG SRC="../../web_art/back_button.gif"
+ALT="Back.gif" X-SAS-UseImageWidth X-SAS-UseImageHeight ALIGN=bottom></A></TD>
+<TD WIDTH=200><FONT color="#0000C0">Back to Data Processing Page</FONT></TD>
+<TD ALIGN=CENTER><A HREF="/datacentre/"><IMG SRC="../../web_art/back_button.gif"
+ALT="Back.gif" X-SAS-UseImageWidth X-SAS-UseImageHeight ALIGN=bottom></A></TD>
+<TD WIDTH=200><FONT color="#0000C0">Back to Data Centre Home Page</FONT></TD>
+</TR>
+</TABLE>
+</center>
+
+</BODY>
+</HTML>
+
