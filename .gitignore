@@ -1,0 +1,26 @@
+.DS_Store
+.idea/
+__pycache__/
+*.pyc
+_old/
+
+# LaTeX
+*.synctex.gz
+*.aux
+*.log
+*.out
+
+# IPython notebooks
+.ipynb_checkpoints/
+.ipynb_checkpoints/*
+
+# R
+*.Rhistory
+
+~$*
+.~lock.*
+
+.credentials
+
+# Figures
+*.eps
