@@ -25,3 +25,5 @@ The `src` folder is subdived into three subfolders:
  - `02_analysis`
 
 ## 02_manuscript
+
+https://doi.org/10.5281/zenodo.14575540
