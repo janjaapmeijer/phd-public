@@ -27,15 +27,15 @@ The corresponding analysis scripts, datasets, or dataset references required to 
 This manuscript is based on *in situ* and satellite altimetry data.  
 The data and analysis are organized as follows:
 
-01_manuscript/
-├── data/
-│ ├── au9706/
-│ ├── ss9802/
-│ └── external/
-└── src/
-├── 00_data/
-├── 01_models/
-└── 02_analysis/
+    01_manuscript/
+    ├── data/
+    │ ├── au9706/
+    │ ├── ss9802/
+    │ └── external/
+    └── src/
+    | ├── 00_data/
+    | ├── 01_models/
+    | └── 02_analysis/
 
 
 **Data folder (`data/`)**  
@@ -54,10 +54,10 @@ The data and analysis are organized as follows:
 This manuscript uses output from the **ACCESS-OM2** global ocean–sea ice simulation at 1/10° resolution.  
 Only a subset of the domain, covering the region where the Subantarctic Front crosses the Southeast Indian Ridge, is required for reproducing the results.
 
-02_manuscript/
-├── data/
-├── notebooks/
-└── src/
+    02_manuscript/
+    ├── data/
+    ├── notebooks/
+    └── src/
 
 
 **ACCESS-OM2 model output:**  
