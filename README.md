@@ -12,7 +12,7 @@ The corresponding analysis scripts, datasets, or dataset references required to 
 
 ---
 
-### Publications and Associated Directories
+### 🚀 Publications and Associated Directories
 
 | Directory | Publication | DOI / Link |
 |------------|--------------|-------------|
@@ -21,6 +21,18 @@ The corresponding analysis scripts, datasets, or dataset references required to 
 | `03_manuscript` | (In preparation / forthcoming) | — |
 
 ---
+
+### 🧭 Getting Started
+
+The analyses use standard open-source Python tools for oceanographic data processing. To reproduce the analyses and figures in this repository, you can create the Conda environment using the provided configuration file `ocean3.yml`:
+
+```bash
+# Create the environment
+conda env create --file ocean3.yml
+
+# Activate the environment
+conda activate ocean3
+```
 
 ## 1. `01_manuscript` — File Structure and Data
 
@@ -68,11 +80,52 @@ For convenience, pre-computed NetCDF files containing additional oceanographic v
 👉 [Zenodo dataset – Additional variables from ACCESS-OM2 output](https://doi.org/10.5281/zenodo.14575540)
 
 To reproduce the results and figures:  
-1. Download the NetCDF datasets linked above.  
-2. Place them in the `data/` directory.  
-3. Run the analysis scripts located in the `notebooks/` folder.
+1. Create the NetCDF datasets yourself with the scripts in the `src` folder and the standard ACCESS-OM2 model output.
+2. Or download the datasets from Zenodo in the links above.  
+3. Place them in the `data/` directory.  
+4. Run the analysis scripts located in the `notebooks/` folder.
 
 ---
+
+### 📚 Citation and Acknowledgement
+
+If you use the scripts, data, or methods provided in this repository in your own work,
+please cite the corresponding publication using its DOI, or include a reference in your bibliography.
+
+For example:
+
+#### First manuscript
+```bibtex
+@article {meijer2022,
+      author = "Jan Jaap Meijer and Helen E. Phillips and Nathaniel L. Bindoff and Stephen R. Rintoul and Annie Foppert",
+      title = "Dynamics of a Standing Meander of the Subantarctic Front Diagnosed from Satellite Altimetry and Along-Stream Anomalies of Temperature and Salinity",
+      journal = "Journal of Physical Oceanography",
+      year = "2022",
+      publisher = "American Meteorological Society",
+      address = "Boston MA, USA",
+      volume = "52",
+      number = "6",
+      doi = "10.1175/JPO-D-21-0049.1",
+      pages = "1073 - 1089",
+      url = "https://journals.ametsoc.org/view/journals/phoc/52/6/JPO-D-21-0049.1.xml"
+}
+```
+
+#### Second manuscript
+```bibtex
+@article {meijer2025,
+      author = "Jan Jaap Meijer and Helen E. Phillips and Stephen R. Rintoul and Nathaniel L. Bindoff and Annie Foppert",
+      title = "Deep cyclogenesis and poleward heat advection beneath a standing meander in the Subantarctic Front",
+      journal = "Journal of Physical Oceanography",
+      year = "2025",
+      publisher = "American Meteorological Society",
+      address = "Boston MA, USA",
+      doi = "10.1175/JPO-D-25-0016.1",
+      url = "https://journals.ametsoc.org/view/journals/phoc/aop/JPO-D-25-0016.1/JPO-D-25-0016.1.xml"
+}
+```
+
+Thank you for acknowledging this work — it helps support open and reproducible oceanographic research.
 
 ### ✅ Notes
 
@@ -81,4 +134,3 @@ To reproduce the results and figures:
 - Please cite the corresponding publications when reusing the data or methods.
 
 ---
-
