@@ -1,57 +1,84 @@
 # Open Repository for Reproducible PhD Research and Publications
 
-This repository contains the result from the PhD research:
+This repository contains the data, scripts, and references necessary to reproduce the results from the PhD research:
 
-PhD Thesis title: [Meander Dynamics in the Antarctic Circumpolar Current](https://figshare.utas.edu.au/articles/thesis/Meander_dynamics_in_the_Antarctic_Circumpolar_Current/25143134?file=45294115)\
-Author: Jan Jaap Meijer
-Date: April, 2023
+**PhD Thesis:** [*Meander Dynamics in the Antarctic Circumpolar Current*](https://figshare.utas.edu.au/articles/thesis/Meander_dynamics_in_the_Antarctic_Circumpolar_Current/25143134?file=45294115)  
+**Author:** Jan Jaap Meijer  
+**Date:** April 2023  
 
-The thesis contains an Introductionary chapter, three Research chapters and a Concluding chapter.
+The thesis consists of an introductory chapter, three research chapters, and a concluding chapter.  
+Each of the three research chapters has resulted in a peer-reviewed publication.  
+The corresponding analysis scripts, datasets, or dataset references required to reproduce these results are provided in this repository.
 
-The three Research chapters have led to three individual manuscripts that are now published. The analysis scipts and datasets or reference to datasets for reproducing the results in these manuscripts are stored in this repository . 
+---
 
- - `01_manuscript`: [Dynamics of a Standing Meander of the Subantarctic Front Diagnosed from Satellite Altimetry and Along-Stream Anomalies of Temperature and Salinity](http://doi.org/10.1175/JPO-D-21-0049.1)
- - `02_manuscript`: [Deep Cyclogenesis and Poleward Heat Advection beneath a Standing Meander in the Subantarctic Front](https://doi.org/10.1175/JPO-D-25-0016.1)
- - `03_manuscript`: []()
+### Publications and Associated Directories
 
-## `01_manuscript` - file structure
+| Directory | Publication | DOI / Link |
+|------------|--------------|-------------|
+| `01_manuscript` | *Dynamics of a Standing Meander of the Subantarctic Front Diagnosed from Satellite Altimetry and Along-Stream Anomalies of Temperature and Salinity* | [10.1175/JPO-D-21-0049.1](http://doi.org/10.1175/JPO-D-21-0049.1) |
+| `02_manuscript` | *Deep Cyclogenesis and Poleward Heat Advection beneath a Standing Meander in the Subantarctic Front* | [10.1175/JPO-D-25-0016.1](https://doi.org/10.1175/JPO-D-25-0016.1) |
+| `03_manuscript` | (In preparation / forthcoming) | — |
 
-In order to reproduce the results of this manuscript, data is required from primarily insitu and satellite altimetry data. This data is structured in the `data` folder and seperated from the source `src` scripts to perform the analysis, as show in this file structure:
+---
 
-    01_manuscript/
-    |-- data/
-      |-- au9706/
-      |-- ss9802/
-      |-- external
-    |-- src/
-      |-- 00_data/
-      |-- 01_models/
-      |-- 02_analysis/
+## 1. `01_manuscript` — File Structure and Data
 
-The `data` folder is a collection of:
- - shipboard insitu data during the standing meander survey of the Subantarctic Front from both the RV Southern Surveyor (`ss9802`) and the RSV Aurora Australis (`au9706`)
- - external data (satellite altimetry, bathymetry etc.)
+This manuscript is based on *in situ* and satellite altimetry data.  
+The data and analysis are organized as follows:
 
-The `src` folder is subdived into three subfolders:
- - in `00_data` are all the scripts necessary to store the insitu data in netcdf format and calculate some TEOS-19 Oceanographic variables with the use of the [GSW-Python](https://github.com/TEOS-10/GSW-Python) package.
- - the scripts for calculating the gradient wind velocities and quasi-geostrophic vorticity terms are stored in `01_models`  
- - and in `02_analysis` are the scripts that produced the rest of the analysis and figures for the manuscript.
+01_manuscript/
+├── data/
+│ ├── au9706/
+│ ├── ss9802/
+│ └── external/
+└── src/
+├── 00_data/
+├── 01_models/
+└── 02_analysis/
 
 
-## 02_manuscript - file structure
+**Data folder (`data/`)**  
+- Contains *in situ* hydrographic observations collected during surveys of the Subantarctic Front aboard the RSV *Aurora Australis* (`au9706`) and RV *Southern Surveyor* (`ss9802`).  
+- Includes additional external datasets (e.g., satellite altimetry, bathymetry, etc.).
 
-This manuscript is based on the output of the ACCESS-OM2 1/10 degree global simulation, but only a small subset of the data located where the Subantarctic Front flows over the Southeast Indian Ridge is required to reproduce the results.
+**Source folder (`src/`)**  
+- `00_data/`: Scripts for converting *in situ* data to NetCDF format and computing TEOS-10 oceanographic variables using [GSW-Python](https://github.com/TEOS-10/GSW-Python).  
+- `01_models/`: Scripts for calculating gradient wind velocities and quasi-geostrophic vorticity terms.  
+- `02_analysis/`: Scripts for the final analyses and figures presented in the manuscript.
 
-    02_manuscript/
-    |-- data/
-    |-- notebooks/
-    |-- src/
+---
 
-The scripts in the `src` folder are needed to calculate additional oceanographic variables (e.g. pressure, geostrophic and gradient wind velocities and the quasi-geostrophic vorticity terms) apart from the stardard model output. Here you can find access to the standard model output variables:\
-[ACCESS-OM2 data](https://geonetwork.nci.org.au/geonetwork/srv/eng/catalog.search#/metadata/f1296_4979_4319_7298)
+## 2. `02_manuscript` — File Structure and Data
 
-However, if you are just interested in reproducing the results and figures for the manuscript than it is easier to download the netcdf datasets where these additional oceanographic variables are stored in: 
+This manuscript uses output from the **ACCESS-OM2** global ocean–sea ice simulation at 1/10° resolution.  
+Only a subset of the domain, covering the region where the Subantarctic Front crosses the Southeast Indian Ridge, is required for reproducing the results.
 
-[Additional oceanographic variables calculated from ACCESS-OM2 output (offline)](https://doi.org/10.5281/zenodo.14575540)
+02_manuscript/
+├── data/
+├── notebooks/
+└── src/
 
-Best practise is to save these netcdf files in the `data` folder. In this way, the analysis scripts in the notebooks folder can find the netcdf files easily.
+
+**ACCESS-OM2 model output:**  
+The standard model data can be accessed via the [ACCESS-OM2 data portal](https://geonetwork.nci.org.au/geonetwork/srv/eng/catalog.search#/metadata/f1296_4979_4319_7298).
+
+**Pre-processed data:**  
+For convenience, pre-computed NetCDF files containing additional oceanographic variables (pressure, geostrophic and gradient wind velocities, and quasi-geostrophic vorticity terms) are available here:  
+👉 [Zenodo dataset – Additional variables from ACCESS-OM2 output](https://doi.org/10.5281/zenodo.14575540)
+
+To reproduce the results and figures:  
+1. Download the NetCDF datasets linked above.  
+2. Place them in the `data/` directory.  
+3. Run the analysis scripts located in the `notebooks/` folder.
+
+---
+
+### ✅ Notes
+
+- This repository adheres to open-science and reproducibility principles.  
+- All scripts are written to be fully transparent and reproducible with publicly available data.  
+- Please cite the corresponding publications when reusing the data or methods.
+
+---
+
