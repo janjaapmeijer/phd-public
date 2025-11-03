@@ -1,10 +1,14 @@
 # Open Repository for Reproducible PhD Research and Publications
 
+This repository contains the result from the PhD research:
+
 PhD Thesis title: [Meander Dynamics in the Antarctic Circumpolar Current](https://figshare.utas.edu.au/articles/thesis/Meander_dynamics_in_the_Antarctic_Circumpolar_Current/25143134?file=45294115)\
 Author: Jan Jaap Meijer
+Date: April, 2023
 
+The thesis contains an Introductionary chapter, three Research chapters and a Concluding chapter.
 
-This repository is divided into 3 manuscripts that are now published.
+The three Research chapters have led to three individual manuscripts that are now published.
 
  - `01_manuscript`: [Dynamics of a Standing Meander of the Subantarctic Front Diagnosed from Satellite Altimetry and Along-Stream Anomalies of Temperature and Salinity](http://doi.org/10.1175/JPO-D-21-0049.1)
  - `02_manuscript`: [Deep cyclogenesis and poleward heat advection beneath a standing meander in the Subantarctic Front](https://doi.org/10.1175/JPO-D-25-0016.1)
@@ -14,25 +18,24 @@ This repository is divided into 3 manuscripts that are now published.
 
     01_manuscript/
     |-- data/
-     |-- au9706/
-     |-- ss9802/
+      |-- au9706/
+      |-- ss9802/
     |-- src/
-     |-- 00_data/
-     |-- 01_models/
-     |-- 02_analysis/
-
-> data
+      |-- 00_data/
+      |-- 01_models/
+      |-- 02_analysis/
 
 This `data` folder is a collection of:
- - shipboard insitu data (`ss9802`/`au9706`)
+ - shipboard insitu data during the standing meander survey of the Subantarctic Front from both the RV Southern Surveyor (`ss9802`) and the RSV Aurora Australis (`au9706`)
  - external data (bathymetry etc.)
-
-> src
 
 The `src` folder is subdived into three subfolders:
 
 
 ## 02_manuscript
+
+    01_manuscript/
+    |-- data/
 
 https://doi.org/10.5281/zenodo.14575540
 
