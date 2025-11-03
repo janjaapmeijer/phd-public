@@ -11,6 +11,16 @@ This repository is divided into 3 manuscripts that are now published.
  - `03_manuscript`: []()
 
 ## `01_manuscript` - file structure
+
+    01_manuscript/
+    |-- data/
+     |-- au9706/
+     |-- ss9802/
+    |-- src/
+     |-- 00_data/
+     |-- 01_models/
+     |-- 02_analysis/
+
 > data
 
 This `data` folder is a collection of:
@@ -20,10 +30,16 @@ This `data` folder is a collection of:
 > src
 
 The `src` folder is subdived into three subfolders:
- - `00_data`
- - `01_models`
- - `02_analysis`
+
 
 ## 02_manuscript
 
 https://doi.org/10.5281/zenodo.14575540
+
+    PhD/
+    |-- data/ contains all the raw data files
+    |-- docs/ contains all documents related to the project
+    |-- figs/ contains images/ figures from papers and created by scripts
+    |-- out/  contains any results from data analysis
+    |-- src/ contains all scripts and functions for the analysis
+
