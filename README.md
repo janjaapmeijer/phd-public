@@ -1,6 +1,6 @@
 # Open Repository for Reproducible PhD Research and Publications
 
-This repository contains the data, scripts, and references necessary to reproduce the results from the PhD research:
+This repository what is necessary to reproduce the results from the PhD research:
 
 **PhD Thesis:** [*Meander Dynamics in the Antarctic Circumpolar Current*](https://figshare.utas.edu.au/articles/thesis/Meander_dynamics_in_the_Antarctic_Circumpolar_Current/25143134?file=45294115)  
 **Author:** Jan Jaap Meijer  
@@ -89,8 +89,7 @@ To reproduce the results and figures:
 
 ### 📚 Citation and Acknowledgement
 
-If you use the scripts, data, or methods provided in this repository in your own work,
-please cite the corresponding publication using its DOI, or include a reference in your bibliography.
+If you use the scripts, data, or methods provided in this repository in your own work, please cite or acknowledge the corresponding publication.
 
 For example:
 
@@ -125,7 +124,7 @@ For example:
 }
 ```
 
-Thank you for acknowledging this work — it helps support open and reproducible oceanographic research.
+Thank you for acknowledging this work.
 
 ### ✅ Notes
 
